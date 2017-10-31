@@ -1,0 +1,16 @@
+[
+    {
+        "name": "waf-tools",
+        "resolver": "git",
+        "method": "semver",
+        "major": 4,
+        "sources": ["github.com/steinwurf/waf-tools.git"]
+    },
+    {
+        "name": "score",
+        "resolver": "git",
+        "method": "semver",
+        "major": 22,
+        "sources": ["gitlab.com/steinwurf/score.git"]
+    }
+]

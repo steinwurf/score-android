@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Score</string>
+    <string name="receiver">Receiver</string>
+    <string name="sender">Sender</string>
+    <string name="icon_content_description">Icon</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="ip">IP</string>
+    <string name="port">Port</string>
+    <string name="status">STATUS</string>
+    <string name="ip_addresses">IP Addresses</string>
+</resources>
