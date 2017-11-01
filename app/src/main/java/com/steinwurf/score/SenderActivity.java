@@ -1,79 +1,71 @@
 package com.steinwurf.score;
 
-        /*
-         * show stats
-         IP
-        sender.dataRedundancy();
-        sender.feedbackProbability();
-        sender.generationSize();
-        sender.generationWindowSize();
-        sender.outgoingMessages();
-        */
-        /*
-         * turn nobs
-         sender.setDataRedundancy();
-         sender.setSymbolSize();
-         sender.setGenerationWindowSize();
-         sender.setGenerationSize();
-         sender.setFeedbackProbability();
-         */
-
-        /*
-         * start
-         * stop
-         * version
-         */
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Random;
 
-public class SenderActivity extends AppCompatActivity implements Server.IServerHandler {
+public class SenderActivity extends AppCompatActivity {
 
     private static final String TAG = SenderActivity.class.getSimpleName();
-    public static final int PORT = 8123;
+    private static final String SENDER_CONFIGURATION = "SENDER_CONFIGURATION";
+    private static final String SENDER_PORT = "SENDER_PORT";
+    private static final String SENDER_IP = "SENDER_IP";
+    private static final String SENDER_SPEED = "SENDER_SPEED";
+    private static final String SENDER_BUFFER_SIZE = "SENDER_BUFFER_SIZE";
+
+    enum State
+    {
+        connected,
+        disconnected,
+        intermediate
+    }
 
     private Button connectButton;
+    private EditText ipEditText;
+    private EditText portEditText;
+    private SeekBar speedSeekBar;
+    private SeekBar bufferSizeSeekBar;
+    private TextView bufferSizeTextView;
+    private TextView speedTextView;
+    private ImageView rotatingImageView;
+    RotateAnimation rotate;
+    WifiManager.MulticastLock multicastLock;
+
+    private Server mServer;
+    private DataGenerator mDataGenerator;
+
     private View.OnClickListener connectOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            connectButton.setEnabled(false);
-            connectButton.setOnClickListener(null);
-            try {
-                int port = Integer.parseInt(((TextView) findViewById(R.id.portEditText)).getText().toString());
-                mServer.start(port);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
+            changeState(State.intermediate);
+            String ipString = ipEditText.getText().toString();
+            String portString = portEditText.getText().toString();
+            mServer.start(ipString, portString);
         }
     };
 
     private View.OnClickListener disconnectOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            connectButton.setEnabled(false);
-            connectButton.setOnClickListener(null);
-            try {
-                mServer.stop();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            changeState(State.intermediate);
+            mServer.stop();
         }
     };
-
-
-    private Server mServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,105 +73,204 @@ public class SenderActivity extends AppCompatActivity implements Server.IServerH
         setContentView(R.layout.activity_sender);
         setTitle(getString(R.string.sender));
         connectButton = findViewById(R.id.connectButton);
+        ipEditText = findViewById(R.id.ipEditText);
+        portEditText = findViewById(R.id.portEditText);
+        speedSeekBar = findViewById(R.id.speedSeekBar);
+        bufferSizeSeekBar = findViewById(R.id.bufferSizeSeekBar);
+        rotatingImageView = findViewById(R.id.rotatingImageView);
+
+        speedTextView = findViewById(R.id.speedTextView);
+        bufferSizeTextView = findViewById(R.id.bufferSizeTextView);
 
         mServer = new Server();
-
-        List<String> ipAddresses = getIpAddresses();
-        if (ipAddresses.size() == 0)
-        {
-            ((TextView)findViewById(R.id.ipsTextView)).setText("Not connected");
-        }
-        else
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (String ip : ipAddresses)
-            {
-                stringBuilder.append(ip);
-                stringBuilder.append('\n');
+        mDataGenerator = new DataGenerator(new DataGenerator.IDataGeneratorHandler() {
+            @Override
+            public void onData(byte[] data) {
+                try {
+                    mServer.sendData(data);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            ((TextView)findViewById(R.id.ipsTextView)).setText(stringBuilder.toString());
-        }
-        ((TextView)findViewById(R.id.portEditText)).setText(Integer.toString(PORT));
+        });
+
+        speedSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                float percentage = i / (float)seekBar.getMax();
+                int speed = i == 0 ? 1 : (int)(percentage * DataGenerator.MAX_SPEED);
+
+                speedTextView.setText(Integer.toString(speed));
+                mDataGenerator.setGeneratorSpeed(speed);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        bufferSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                float percentage = i / (float)seekBar.getMax();
+                int bufferSize = i == 0 ? 1 : (int)(percentage * DataGenerator.MAX_BUFFER_SIZE);
+
+                bufferSizeTextView.setText(Integer.toString(bufferSize));
+                mDataGenerator.setBufferSize(bufferSize);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        SharedPreferences preferences = getSharedPreferences(SENDER_CONFIGURATION, MODE_PRIVATE);
+        ipEditText.setText(preferences.getString(SENDER_IP, "224.0.0.251"));
+        portEditText.setText(preferences.getString(SENDER_PORT, "9010"));
+
+        /// onProgressChanged is only called when the progress is different from last.
+        /// The default progess is 0, so changing it to 1 and then to whatever is returned
+        /// from the preference will cause onProgressChanged, regardless of the value from the
+        /// preference.
+        speedSeekBar.setProgress(1);
+        speedSeekBar.setProgress(preferences.getInt(SENDER_SPEED, 1000));
+
+        bufferSizeSeekBar.setProgress(1);
+        bufferSizeSeekBar.setProgress(preferences.getInt(SENDER_BUFFER_SIZE, 1000));
+
+        rotate = new RotateAnimation(
+                0,
+                360,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f);
+
+        rotate.setRepeatCount(1);
+        rotate.setInterpolator(new LinearInterpolator());
+        rotate.setAnimationListener(new Animation.AnimationListener(){
+            @Override
+            public void onAnimationStart(Animation rotate) {
+            }
+            @Override
+            public void onAnimationRepeat(Animation rotate) {
+                rotate.setDuration(mDataGenerator.timeBetweenTransfers());
+            }
+            @Override
+            public void onAnimationEnd(Animation rotate) {
+            }
+        });
+        rotate.setRepeatCount(Animation.INFINITE);
+
+        WifiManager wm = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        assert wm != null;
+        multicastLock = wm.createMulticastLock(TAG);
+        multicastLock.acquire();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mServer.setHandler(this);
-        connectButton.setOnClickListener(connectOnClickListener);
+        mServer.setHandler(new Server.IServerHandler() {
+
+            @Override
+            public void onStarted() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        changeState(State.connected);
+                    }
+                });
+                mDataGenerator.start();
+            }
+
+            @Override
+            public void onError(final String reason) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(SenderActivity.this, reason, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onStopped() {
+                mDataGenerator.stop();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        changeState(State.disconnected);
+                    }
+                });
+            }
+        });
+        changeState(State.disconnected);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-
         mServer.setHandler(null);
-        try {
-            mServer.stop();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private byte[] generateData(int size)
-    {
-        byte[] data = new byte[size];
-        new Random().nextBytes(data);
-        return data;
-    }
-
-    private List<String> getIpAddresses()
-    {
-        List<String> ipAddresses = new ArrayList<>();
-        try {
-            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-            while (networkInterfaces.hasMoreElements()) {
-                NetworkInterface networkInterface = networkInterfaces.nextElement();
-                Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
-                while (inetAddresses.hasMoreElements()) {
-                    InetAddress inetAddress = inetAddresses.nextElement();
-                    if (inetAddress.isSiteLocalAddress()) {
-                        ipAddresses.add(inetAddress.getHostAddress());
-                    }
-                }
-            }
-        }
-        catch (SocketException ignored) {
-        }
-        return ipAddresses;
+        mDataGenerator.stop();
+        mServer.stop();
     }
 
     @Override
-    public void onStarted() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                connectButton.setEnabled(true);
+    protected void onDestroy() {
+        super.onDestroy();
+
+        getSharedPreferences(SENDER_CONFIGURATION, MODE_PRIVATE)
+                .edit()
+                .putString(SENDER_PORT, portEditText.getText().toString())
+                .putString(SENDER_IP, ipEditText.getText().toString())
+                .putInt(SENDER_SPEED, speedSeekBar.getProgress())
+                .putInt(SENDER_BUFFER_SIZE, bufferSizeSeekBar.getProgress())
+                .apply();
+
+        multicastLock.release();
+    }
+
+    void changeState(State newState)
+    {
+        switch (newState)
+        {
+            case connected:
                 connectButton.setText(R.string.disconnect);
                 connectButton.setOnClickListener(disconnectOnClickListener);
-            }
-        });
-    }
-
-    @Override
-    public void onStopped() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
                 connectButton.setEnabled(true);
+                ipEditText.setEnabled(false);
+                portEditText.setEnabled(false);
+                rotate.setDuration(mDataGenerator.timeBetweenTransfers());
+                rotatingImageView.startAnimation(rotate);
+                break;
+            case intermediate:
+                ipEditText.setEnabled(false);
+                portEditText.setEnabled(false);
+                connectButton.setEnabled(false);
+                connectButton.setOnClickListener(null);
+                rotatingImageView.clearAnimation();
+                break;
+            case disconnected:
                 connectButton.setText(R.string.connect);
                 connectButton.setOnClickListener(connectOnClickListener);
-            }
-        });
-    }
-
-    @Override
-    public void onConnection(final String hostAddress) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(SenderActivity.this, hostAddress, Toast.LENGTH_LONG).show();
-            }
-        });
+                connectButton.setEnabled(true);
+                ipEditText.setEnabled(true);
+                portEditText.setEnabled(true);
+                rotatingImageView.clearAnimation();
+                break;
+        }
     }
 }

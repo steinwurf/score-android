@@ -2,11 +2,10 @@ package com.steinwurf.score;
 
 import android.util.Log;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 
 class Server
 {
@@ -15,64 +14,58 @@ class Server
     interface IServerHandler
     {
         void onStarted();
+        void onError(String reason);
         void onStopped();
-        void onConnection(String hostAddress);
     }
 
     private IServerHandler handler;
-    private ServerSocket serverSocket = null;
-    private Thread connectionHandler = null;
+    private MulticastSocket socket;
+    private int port = 0;
+    private InetAddress ip = null;
 
     void setHandler(IServerHandler handler)
     {
         this.handler = handler;
     }
 
-    void start(final int port) {
-        connectionHandler = new Thread(new Runnable()
+    void start(final String ipString, final String portString) {
+        new Thread(new Runnable()
         {
             @Override
             public void run() {
-                if (handler != null)
-                    handler.onStarted();
                 try {
-                    serverSocket = new ServerSocket(port);
-                    while (true) {
-                        final Socket socket = serverSocket.accept();
-                        Log.d(TAG, "Got connection!");
-                        if (handler != null)
-                            handler.onConnection(socket.getInetAddress().getHostAddress());
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    BufferedWriter out = new BufferedWriter(
-                                            new OutputStreamWriter(socket.getOutputStream()));
-                                    out.write("Test message");
-                                    out.newLine();
-                                    socket.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-                    }
-                } catch (IOException ignored) { }
-                if (handler != null)
-                    handler.onStopped();
-            }
-        });
+                    port = Integer.parseInt(portString);
+                    ip = InetAddress.getByName(ipString);
+                    socket = new MulticastSocket(port);
+                    socket.joinGroup(ip);
 
-        connectionHandler.start();
+                    Log.d(TAG, "started");
+                    if (handler != null)
+                        handler.onStarted();
+
+                } catch (IOException | NumberFormatException e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "stopped");
+                    if (handler != null) {
+                        handler.onError(e.toString());
+                        handler.onStopped();
+                    }
+                }
+            }
+        }).start();
     }
 
-    void stop() throws IOException {
-        serverSocket.close();
-        try {
-            connectionHandler.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    void sendData(byte[] data) throws IOException {
+        if (socket != null)
+        {
+            DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
+            socket.send(packet);
         }
     }
 
+    void stop() {
+        Log.d(TAG, "stopped");
+        if (handler != null)
+            handler.onStopped();
+    }
 }

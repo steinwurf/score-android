@@ -1,117 +1,174 @@
 package com.steinwurf.score;
 
-import android.support.v7.app.AppCompatActivity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.steinwurf.score.receiver.Receiver;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+public class ReceiverActivity extends AppCompatActivity {
 
-public class ReceiverActivity extends AppCompatActivity implements Client.IClientHandler {
+    private static final String TAG = ReceiverActivity.class.getSimpleName();
+    private static final String RECEIVER_CONFIGURATION = "RECEIVER_CONFIGURATION";
+    private static final String RECEIVER_PORT = "RECEIVER_PORT";
+    private static final String RECEIVER_IP = "RECEIVER_IP";
 
-    private static final String TAG = SenderActivity.class.getSimpleName();
-    public static final int PORT = 8123;
+    enum State
+    {
+        connected,
+        disconnected,
+        intermediate
+    }
 
-    Button connectButton;
+    private Button connectButton;
+    private EditText ipEditText;
+    private EditText portEditText;
+    private TextView statusTextView;
+
+    WifiManager.MulticastLock multicastLock;
+
+    private Client mClient;
+
     private View.OnClickListener connectOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            connectButton.setEnabled(false);
-            connectButton.setOnClickListener(null);
-            String ipString = ((TextView) findViewById(R.id.ipEditText)).getText().toString();
-            int port = Integer.parseInt(((TextView) findViewById(R.id.portEditText)).getText().toString());
-            try {
-                InetAddress ip = InetAddress.getByName(ipString);
-                mClient.start(ip, port);
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
+            changeState(State.intermediate);
+            String ipString = ipEditText.getText().toString();
+            String portString = portEditText.getText().toString();
+            mClient.start(ipString, portString);
         }
     };
 
     private View.OnClickListener disconnectOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            connectButton.setEnabled(false);
-            connectButton.setOnClickListener(null);
-            try {
-                mClient.stop();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            changeState(State.intermediate);
+            mClient.stop();
         }
     };
 
-    Client mClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_receiver);
         setTitle(getString(R.string.receiver));
-        ((TextView)findViewById(R.id.portEditText)).setText(Integer.toString(PORT));
-        ((TextView)findViewById(R.id.ipEditText)).setText("");
+        connectButton = findViewById(R.id.connectButton);
+        ipEditText = findViewById(R.id.ipEditText);
+        portEditText = findViewById(R.id.portEditText);
+        statusTextView = findViewById(R.id.statusTextView);
+
+        SharedPreferences preferences = getSharedPreferences(RECEIVER_CONFIGURATION, MODE_PRIVATE);
+        ipEditText.setText(preferences.getString(RECEIVER_IP, "224.0.0.251"));
+        portEditText.setText(preferences.getString(RECEIVER_PORT, "9010"));
+
+        WifiManager wm = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        assert wm != null;
+        multicastLock = wm.createMulticastLock(TAG);
+        multicastLock.acquire();
 
         mClient = new Client();
-
-        connectButton = findViewById(R.id.connectButton);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mClient.setHandler(this);
-        connectButton.setOnClickListener(connectOnClickListener);
+        mClient.setHandler(new Client.IClientHandler() {
+            @Override
+            public void onStarted() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        changeState(State.connected);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(final String reason) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ReceiverActivity.this, reason, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onStopped() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        changeState(State.disconnected);
+                    }
+                });
+            }
+
+            @Override
+            public void onData(final byte[] data) {
+                final int id = data[0] & 0xff;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        statusTextView.setText(Integer.toString(id));
+                    }
+                });
+            }
+        });
+        changeState(State.disconnected);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        try {
-            mClient.stop();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        mClient.setHandler(null);
+        mClient.stop();
     }
 
     @Override
-    public void onStarted() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                connectButton.setEnabled(true);
+    protected void onDestroy() {
+        super.onDestroy();
+
+        getSharedPreferences(RECEIVER_CONFIGURATION, MODE_PRIVATE)
+                .edit()
+                .putString(RECEIVER_PORT, portEditText.getText().toString())
+                .putString(RECEIVER_IP, ipEditText.getText().toString())
+                .apply();
+
+        multicastLock.release();
+    }
+
+    void changeState(State newState)
+    {
+        switch (newState)
+        {
+            case connected:
                 connectButton.setText(R.string.disconnect);
                 connectButton.setOnClickListener(disconnectOnClickListener);
-            }
-        });
-    }
-
-    @Override
-    public void onStopped() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
                 connectButton.setEnabled(true);
+                ipEditText.setEnabled(false);
+                portEditText.setEnabled(false);
+                break;
+            case intermediate:
+                ipEditText.setEnabled(false);
+                portEditText.setEnabled(false);
+                connectButton.setEnabled(false);
+                connectButton.setOnClickListener(null);
+                break;
+            case disconnected:
                 connectButton.setText(R.string.connect);
                 connectButton.setOnClickListener(connectOnClickListener);
-            }
-        });
-    }
-
-    @Override
-    public void onMessage(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(ReceiverActivity.this, message, Toast.LENGTH_LONG).show();
-            }
-        });
+                connectButton.setEnabled(true);
+                ipEditText.setEnabled(true);
+                portEditText.setEnabled(true);
+                break;
+        }
     }
 }

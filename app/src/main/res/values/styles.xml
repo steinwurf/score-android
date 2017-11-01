@@ -5,7 +5,9 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+        <item name="android:colorForeground">@color/colorPrimary</item>
+        <item name="android:colorBackground">@color/colorAccent</item>
+        <item name="android:textColorPrimaryInverse">@color/colorPrimary</item>
     </style>
-
 </resources>

@@ -2,65 +2,84 @@ package com.steinwurf.score;
 
 import android.util.Log;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.Socket;
+import java.net.MulticastSocket;
 
 class Client {
 
-    private static final String TAG = SenderActivity.class.getSimpleName();
+    private static final String TAG = Client.class.getSimpleName();
 
     interface IClientHandler
     {
         void onStarted();
+        void onError(String reason);
         void onStopped();
-        void onMessage(String message);
+        void onData(byte[] data);
     }
 
     private IClientHandler handler;
+    private MulticastSocket socket;
 
-    private Socket clientSocket = null;
+    private final byte[] receiveBuffer = new byte[2000];
+
     private Thread connectionHandler = null;
-    private boolean running = false;
 
     void setHandler(IClientHandler handler)
     {
         this.handler = handler;
     }
 
-    void start(final InetAddress ip, final int port) {
+    void start(final String ipString, final String portString) {
         connectionHandler = new Thread(new Runnable() {
             @Override
             public void run() {
-                if (handler != null)
-                    handler.onStarted();
                 try {
-                    clientSocket = new Socket(ip, port);
-                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    String message = in.readLine();
-                    Log.d(TAG, "message: " + message);
-                    if (handler != null)
-                        handler.onMessage(message);
+                    int port = Integer.parseInt(portString);
+                    InetAddress ip = InetAddress.getByName(ipString);
+                    socket = new MulticastSocket(port);
+                    socket.joinGroup(ip);
 
-                    clientSocket.close();
-                } catch (IOException e) {
+                    Log.d(TAG, "started");
+                    if (handler != null)
+                        handler.onStarted();
+
+                    /// Read
+                    while(true)
+                    {
+                        DatagramPacket packet = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                        socket.receive(packet);
+                        Log.d(TAG, "Got some! " + packet.getLength());
+                        if (handler != null)
+                            handler.onData(packet.getData());
+                    }
+
+                } catch (IOException | NumberFormatException e) {
                     e.printStackTrace();
+                    Log.d(TAG, "stopped");
+                    if (handler != null) {
+                        handler.onError(e.toString());
+                        handler.onStopped();
+                    }
                 }
-                if (handler != null)
-                    handler.onStopped();
             }
         });
         connectionHandler.start();
     }
 
-    void stop() throws IOException {
-        clientSocket.close();
-        try {
-            connectionHandler.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    void stop()
+    {
+        if (connectionHandler != null) {
+            socket.close();
+            try {
+                connectionHandler.join();
+            } catch (InterruptedException e) {
+                handler.onError(e.toString());
+            }
         }
+        Log.d(TAG, "stopped");
+        if (handler != null)
+            handler.onStopped();
     }
 }

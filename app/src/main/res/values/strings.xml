@@ -9,4 +9,11 @@
     <string name="port">Port</string>
     <string name="status">STATUS</string>
     <string name="ip_addresses">IP Addresses</string>
+    <string name="ip_address">IP Address</string>
+    <string name="controls">Controls</string>
+    <string name="speed">Speed</string>
+    <string name="buffer_size">Buffer Size</string>
+    <string name="configuration">Configuration</string>
+    <string name="bytes">Bytes</string>
+    <string name="bytes_second">Bytes/Second</string>
 </resources>
