@@ -7,131 +7,129 @@
     android:orientation="vertical"
     android:gravity="top"
     android:padding="16dp"
+    android:animateLayoutChanges="true"
     tools:context="com.steinwurf.score.SenderActivity">
-
-        <TextView
+        <LinearLayout
+            android:id="@+id/configurationLinearLayout"
+            android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/configuration"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+            android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/configuration"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/ip_address"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ip_address"/>
 
-        <EditText
-            android:id="@+id/ipEditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"/>
+                <EditText
+                    android:id="@+id/ipEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/port"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/port"/>
 
-        <EditText
-            android:id="@+id/portEditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="6"
-            android:inputType="number"/>
+                <EditText
+                    android:id="@+id/portEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="6"
+                    android:inputType="number"/>
+        </LinearLayout>
 
         <Button
             android:id="@+id/connectButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/connect"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/controls"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/controlLinearLayout"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/speed"/>
-
-                <Space
-                    android:layout_width="4dp"
-                    android:layout_height="wrap_content"/>
-
-                <TextView
-                    android:id="@+id/speedTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"/>
-
-                <Space
-                    android:layout_width="4dp"
-                    android:layout_height="wrap_content"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/bytes_second"/>
-
-        </LinearLayout>
-
-        <SeekBar
-            android:id="@+id/speedSeekBar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="100"/>
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/controls"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/buffer_size"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-                <Space
-                    android:layout_width="4dp"
-                    android:layout_height="wrap_content"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/speed"/>
 
-                <TextView
-                    android:id="@+id/bufferSizeTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    <Space
+                        android:layout_width="4dp"
+                        android:layout_height="wrap_content"/>
 
-                <Space
-                    android:layout_width="4dp"
-                    android:layout_height="wrap_content"/>
+                    <TextView
+                        android:id="@+id/speedTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/bytes"/>
+                    <Space
+                        android:layout_width="4dp"
+                        android:layout_height="wrap_content"/>
 
-        </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/bytes_second"/>
 
-        <SeekBar
-            android:id="@+id/bufferSizeSeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="100"/>
+            </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
-                <ImageView
-                    android:id="@+id/rotatingImageView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:tint="@color/colorPrimaryDark"
-                    app:srcCompat="@android:drawable/ic_menu_rotate" />
+            <SeekBar
+                android:id="@+id/speedSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/buffer_size"/>
+
+                    <Space
+                        android:layout_width="4dp"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:id="@+id/bufferSizeTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Space
+                        android:layout_width="4dp"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/bytes"/>
+
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/bufferSizeSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"/>
         </LinearLayout>
 </LinearLayout>

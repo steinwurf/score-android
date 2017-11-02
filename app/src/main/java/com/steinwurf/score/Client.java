@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.nio.ByteBuffer;
 
 class Client {
 
@@ -16,7 +17,7 @@ class Client {
         void onStarted();
         void onError(String reason);
         void onStopped();
-        void onData(byte[] data);
+        void onData(ByteBuffer data);
     }
 
     private IClientHandler handler;
@@ -50,9 +51,13 @@ class Client {
                     {
                         DatagramPacket packet = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                         socket.receive(packet);
-                        Log.d(TAG, "Got some! " + packet.getLength());
-                        if (handler != null)
-                            handler.onData(packet.getData());
+                        if (handler != null) {
+                            ByteBuffer buffer = ByteBuffer.wrap(
+                                    packet.getData(),
+                                    packet.getOffset(),
+                                    packet.getLength());
+                            handler.onData(buffer);
+                        }
                     }
 
                 } catch (IOException | NumberFormatException e) {

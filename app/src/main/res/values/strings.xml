@@ -7,7 +7,6 @@
     <string name="disconnect">Disconnect</string>
     <string name="ip">IP</string>
     <string name="port">Port</string>
-    <string name="status">STATUS</string>
     <string name="ip_addresses">IP Addresses</string>
     <string name="ip_address">IP Address</string>
     <string name="controls">Controls</string>
@@ -16,4 +15,7 @@
     <string name="configuration">Configuration</string>
     <string name="bytes">Bytes</string>
     <string name="bytes_second">Bytes/Second</string>
+    <string name="keep_alive">Keep Alive</string>
+    <string name="interval">Interval</string>
+    <string name="ms">ms</string>
 </resources>

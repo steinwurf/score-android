@@ -4,15 +4,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,14 +33,17 @@ public class SenderActivity extends AppCompatActivity {
     }
 
     private Button connectButton;
+
+    private LinearLayout configurationLinearLayout;
     private EditText ipEditText;
     private EditText portEditText;
-    private SeekBar speedSeekBar;
-    private SeekBar bufferSizeSeekBar;
-    private TextView bufferSizeTextView;
+
+    private LinearLayout controlLinearLayout;
     private TextView speedTextView;
-    private ImageView rotatingImageView;
-    RotateAnimation rotate;
+    private SeekBar speedSeekBar;
+    private TextView bufferSizeTextView;
+    private SeekBar bufferSizeSeekBar;
+
     WifiManager.MulticastLock multicastLock;
 
     private Server mServer;
@@ -72,17 +72,21 @@ public class SenderActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sender);
         setTitle(getString(R.string.sender));
+
         connectButton = findViewById(R.id.connectButton);
+
+        configurationLinearLayout = findViewById(R.id.configurationLinearLayout);
         ipEditText = findViewById(R.id.ipEditText);
         portEditText = findViewById(R.id.portEditText);
-        speedSeekBar = findViewById(R.id.speedSeekBar);
-        bufferSizeSeekBar = findViewById(R.id.bufferSizeSeekBar);
-        rotatingImageView = findViewById(R.id.rotatingImageView);
 
+        controlLinearLayout = findViewById(R.id.controlLinearLayout);
         speedTextView = findViewById(R.id.speedTextView);
+        speedSeekBar = findViewById(R.id.speedSeekBar);
         bufferSizeTextView = findViewById(R.id.bufferSizeTextView);
+        bufferSizeSeekBar = findViewById(R.id.bufferSizeSeekBar);
 
         mServer = new Server();
+
         mDataGenerator = new DataGenerator(new DataGenerator.IDataGeneratorHandler() {
             @Override
             public void onData(byte[] data) {
@@ -99,7 +103,6 @@ public class SenderActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 float percentage = i / (float)seekBar.getMax();
                 int speed = i == 0 ? 1 : (int)(percentage * DataGenerator.MAX_SPEED);
-
                 speedTextView.setText(Integer.toString(speed));
                 mDataGenerator.setGeneratorSpeed(speed);
             }
@@ -119,8 +122,7 @@ public class SenderActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 float percentage = i / (float)seekBar.getMax();
-                int bufferSize = i == 0 ? 1 : (int)(percentage * DataGenerator.MAX_BUFFER_SIZE);
-
+                int bufferSize = (int)(percentage * (DataGenerator.MAX_BUFFER_SIZE - DataGenerator.MIN_BUFFER_SIZE) + DataGenerator.MIN_BUFFER_SIZE);
                 bufferSizeTextView.setText(Integer.toString(bufferSize));
                 mDataGenerator.setBufferSize(bufferSize);
             }
@@ -149,30 +151,6 @@ public class SenderActivity extends AppCompatActivity {
 
         bufferSizeSeekBar.setProgress(1);
         bufferSizeSeekBar.setProgress(preferences.getInt(SENDER_BUFFER_SIZE, 1000));
-
-        rotate = new RotateAnimation(
-                0,
-                360,
-                Animation.RELATIVE_TO_SELF,
-                0.5f,
-                Animation.RELATIVE_TO_SELF,
-                0.5f);
-
-        rotate.setRepeatCount(1);
-        rotate.setInterpolator(new LinearInterpolator());
-        rotate.setAnimationListener(new Animation.AnimationListener(){
-            @Override
-            public void onAnimationStart(Animation rotate) {
-            }
-            @Override
-            public void onAnimationRepeat(Animation rotate) {
-                rotate.setDuration(mDataGenerator.timeBetweenTransfers());
-            }
-            @Override
-            public void onAnimationEnd(Animation rotate) {
-            }
-        });
-        rotate.setRepeatCount(Animation.INFINITE);
 
         WifiManager wm = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wm != null;
@@ -251,25 +229,21 @@ public class SenderActivity extends AppCompatActivity {
                 connectButton.setText(R.string.disconnect);
                 connectButton.setOnClickListener(disconnectOnClickListener);
                 connectButton.setEnabled(true);
-                ipEditText.setEnabled(false);
-                portEditText.setEnabled(false);
-                rotate.setDuration(mDataGenerator.timeBetweenTransfers());
-                rotatingImageView.startAnimation(rotate);
+                configurationLinearLayout.setVisibility(View.GONE);
+                controlLinearLayout.setVisibility(View.VISIBLE);
                 break;
             case intermediate:
-                ipEditText.setEnabled(false);
-                portEditText.setEnabled(false);
-                connectButton.setEnabled(false);
                 connectButton.setOnClickListener(null);
-                rotatingImageView.clearAnimation();
+                connectButton.setEnabled(false);
+                configurationLinearLayout.setVisibility(View.GONE);
+                controlLinearLayout.setVisibility(View.GONE);
                 break;
             case disconnected:
                 connectButton.setText(R.string.connect);
                 connectButton.setOnClickListener(connectOnClickListener);
                 connectButton.setEnabled(true);
-                ipEditText.setEnabled(true);
-                portEditText.setEnabled(true);
-                rotatingImageView.clearAnimation();
+                configurationLinearLayout.setVisibility(View.VISIBLE);
+                controlLinearLayout.setVisibility(View.GONE);
                 break;
         }
     }

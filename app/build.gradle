@@ -27,5 +27,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     compile project(path: ':sender')
     compile project(path: ':receiver')
-    compile 'com.jjoe64:graphview:4.2.1' // http://www.android-graphview.org/realtime-chart/
+    compile 'com.jjoe64:graphview:4.2.1'
 }

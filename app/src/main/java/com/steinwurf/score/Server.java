@@ -64,6 +64,8 @@ class Server
     }
 
     void stop() {
+        if (socket != null)
+            socket.close();
         Log.d(TAG, "stopped");
         if (handler != null)
             handler.onStopped();
