@@ -37,9 +37,9 @@ jlong Java_com_steinwurf_score_sender_Sender_init(
     return reinterpret_cast<jlong>(new score::api::manual_sender());
 }
 void Java_com_steinwurf_score_sender_Sender_writeData(
-    JNIEnv* env, jobject thiz, jbyteArray jdata)
+    JNIEnv* env, jobject thiz, jbyteArray jdata, jint offset, jint size)
 {
-    auto data = jutils::java_byte_array_to_vector(env, jdata);
+    auto data = jutils::java_byte_array_to_vector(env, jdata, offset, size);
     auto& sender = jutils::get_native<score::api::manual_sender>(env, thiz);
     sender.write_data(data);
 }
@@ -80,9 +80,9 @@ jbyteArray Java_com_steinwurf_score_sender_Sender_getOutgoingMessage(
 }
 
 void Java_com_steinwurf_score_sender_Sender_receiveMessage(
-    JNIEnv* env, jobject thiz, jbyteArray jbuffer)
+    JNIEnv* env, jobject thiz, jbyteArray jbuffer, jint offset, jint size)
 {
-    auto buffer = jutils::java_byte_array_to_vector(env, jbuffer);
+    auto buffer = jutils::java_byte_array_to_vector(env, jbuffer, offset, size);
     auto& sender = jutils::get_native<score::api::manual_sender>(env, thiz);
     std::error_code error;
     sender.receive_message(buffer, error);

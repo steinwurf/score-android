@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -14,16 +13,32 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.steinwurf.score.sender.Sender;
+
 import java.io.IOException;
 
-public class SenderActivity extends AppCompatActivity {
+public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IOnMessageHandler {
 
     private static final String TAG = SenderActivity.class.getSimpleName();
     private static final String SENDER_CONFIGURATION = "SENDER_CONFIGURATION";
+
+    // network
     private static final String SENDER_PORT = "SENDER_PORT";
     private static final String SENDER_IP = "SENDER_IP";
     private static final String SENDER_SPEED = "SENDER_SPEED";
     private static final String SENDER_BUFFER_SIZE = "SENDER_BUFFER_SIZE";
+
+    // protocol
+    private static final String SYMBOL_SIZE = "SENDER_BUFFER_SIZE";
+    private static final String GENERATION_SIZE = "SENDER_BUFFER_SIZE";
+    private static final String GENERATION_WINDOW_SIZE = "SENDER_BUFFER_SIZE";
+    private static final String DATA_REDUNDANCY = "SENDER_BUFFER_SIZE";
+    private static final String FEEDBACK_PROBABILITY = "SENDER_BUFFER_SIZE";
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
 
     enum State
     {
@@ -39,15 +54,22 @@ public class SenderActivity extends AppCompatActivity {
     private EditText portEditText;
 
     private LinearLayout controlLinearLayout;
-    private TextView speedTextView;
-    private SeekBar speedSeekBar;
-    private TextView bufferSizeTextView;
-    private SeekBar bufferSizeSeekBar;
+
+    // Network
+    private SeekBarHelper speedSeekBar;
+    private SeekBarHelper bufferSizeSeekBar;
+    // Protocol
+    private SeekBarHelper symbolSizeSeekBar;
+    private SeekBarHelper generationSizeSeekBar;
+    private SeekBarHelper generationWindowSizeSeekBar;
+    private SeekBarHelper dataRedundancySeekBar;
+    private SeekBarHelper feedbackProbabilitySeekBar;
 
     WifiManager.MulticastLock multicastLock;
 
     private Server mServer;
-    private DataGenerator mDataGenerator;
+    private MessageGenerator mMessageGenerator;
+    private ScoreEncoder mScoreEncoder;
 
     private View.OnClickListener connectOnClickListener = new View.OnClickListener() {
         @Override
@@ -80,87 +102,31 @@ public class SenderActivity extends AppCompatActivity {
         portEditText = findViewById(R.id.portEditText);
 
         controlLinearLayout = findViewById(R.id.controlLinearLayout);
-        speedTextView = findViewById(R.id.speedTextView);
-        speedSeekBar = findViewById(R.id.speedSeekBar);
-        bufferSizeTextView = findViewById(R.id.bufferSizeTextView);
-        bufferSizeSeekBar = findViewById(R.id.bufferSizeSeekBar);
 
         mServer = new Server();
+        mScoreEncoder = new ScoreEncoder(this);
+        mMessageGenerator = new MessageGenerator(mScoreEncoder);
 
-        mDataGenerator = new DataGenerator(new DataGenerator.IDataGeneratorHandler() {
-            @Override
-            public void onData(byte[] data) {
-                try {
-                    mServer.sendData(data);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        speedSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                float percentage = i / (float)seekBar.getMax();
-                int speed = i == 0 ? 1 : (int)(percentage * DataGenerator.MAX_SPEED);
-                speedTextView.setText(Integer.toString(speed));
-                mDataGenerator.setGeneratorSpeed(speed);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-        bufferSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                float percentage = i / (float)seekBar.getMax();
-                int bufferSize = (int)(percentage * (DataGenerator.MAX_BUFFER_SIZE - DataGenerator.MIN_BUFFER_SIZE) + DataGenerator.MIN_BUFFER_SIZE);
-                bufferSizeTextView.setText(Integer.toString(bufferSize));
-                mDataGenerator.setBufferSize(bufferSize);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-        SharedPreferences preferences = getSharedPreferences(SENDER_CONFIGURATION, MODE_PRIVATE);
-        ipEditText.setText(preferences.getString(SENDER_IP, "224.0.0.251"));
-        portEditText.setText(preferences.getString(SENDER_PORT, "9010"));
-
-        /// onProgressChanged is only called when the progress is different from last.
-        /// The default progess is 0, so changing it to 1 and then to whatever is returned
-        /// from the preference will cause onProgressChanged, regardless of the value from the
-        /// preference.
-        speedSeekBar.setProgress(1);
-        speedSeekBar.setProgress(preferences.getInt(SENDER_SPEED, 1000));
-
-        bufferSizeSeekBar.setProgress(1);
-        bufferSizeSeekBar.setProgress(preferences.getInt(SENDER_BUFFER_SIZE, 1000));
-
-        WifiManager wm = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        assert wm != null;
-        multicastLock = wm.createMulticastLock(TAG);
-        multicastLock.acquire();
+        setUpSeekBars();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+
+        SharedPreferences preferences = getSharedPreferences(SENDER_CONFIGURATION, MODE_PRIVATE);
+        ipEditText.setText(preferences.getString(SENDER_IP, "224.0.0.251"));
+        portEditText.setText(preferences.getString(SENDER_PORT, "9010"));
+
+        speedSeekBar.setProgress(preferences.getInt(SENDER_SPEED, speedSeekBar.valueToProgress(1000)));
+        bufferSizeSeekBar.setProgress(preferences.getInt(SENDER_BUFFER_SIZE, bufferSizeSeekBar.valueToProgress(1000)));
+        symbolSizeSeekBar.setProgress(preferences.getInt(SYMBOL_SIZE, symbolSizeSeekBar.valueToProgress(1000)));
+        generationSizeSeekBar.setProgress(preferences.getInt(GENERATION_SIZE, generationSizeSeekBar.valueToProgress(64)));
+        generationWindowSizeSeekBar.setProgress(preferences.getInt(GENERATION_WINDOW_SIZE, generationWindowSizeSeekBar.valueToProgress(20)));
+        dataRedundancySeekBar.setProgress(preferences.getInt(DATA_REDUNDANCY, dataRedundancySeekBar.valueToProgress(10)));
+        feedbackProbabilitySeekBar.setProgress(preferences.getInt(FEEDBACK_PROBABILITY, feedbackProbabilitySeekBar.valueToProgress(50)));
+
+
         mServer.setHandler(new Server.IServerHandler() {
 
             @Override
@@ -171,7 +137,7 @@ public class SenderActivity extends AppCompatActivity {
                         changeState(State.connected);
                     }
                 });
-                mDataGenerator.start();
+                mMessageGenerator.start();
             }
 
             @Override
@@ -186,7 +152,7 @@ public class SenderActivity extends AppCompatActivity {
 
             @Override
             public void onStopped() {
-                mDataGenerator.stop();
+                mMessageGenerator.stop();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -196,19 +162,19 @@ public class SenderActivity extends AppCompatActivity {
             }
         });
         changeState(State.disconnected);
+
+        WifiManager wm = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        assert wm != null;
+        multicastLock = wm.createMulticastLock(TAG);
+        multicastLock.acquire();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         mServer.setHandler(null);
-        mDataGenerator.stop();
+        mMessageGenerator.stop();
         mServer.stop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
 
         getSharedPreferences(SENDER_CONFIGURATION, MODE_PRIVATE)
                 .edit()
@@ -216,12 +182,32 @@ public class SenderActivity extends AppCompatActivity {
                 .putString(SENDER_IP, ipEditText.getText().toString())
                 .putInt(SENDER_SPEED, speedSeekBar.getProgress())
                 .putInt(SENDER_BUFFER_SIZE, bufferSizeSeekBar.getProgress())
+                .putInt(SYMBOL_SIZE, symbolSizeSeekBar.getProgress())
+                .putInt(GENERATION_SIZE, generationSizeSeekBar.getProgress())
+                .putInt(GENERATION_WINDOW_SIZE, generationWindowSizeSeekBar.getProgress())
+                .putInt(DATA_REDUNDANCY, dataRedundancySeekBar.getProgress())
+                .putInt(FEEDBACK_PROBABILITY, feedbackProbabilitySeekBar.getProgress())
                 .apply();
+
 
         multicastLock.release();
     }
 
-    void changeState(State newState)
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    public void onMessage(byte[] data) {
+        try {
+            mServer.sendData(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void changeState(State newState)
     {
         switch (newState)
         {
@@ -246,5 +232,107 @@ public class SenderActivity extends AppCompatActivity {
                 controlLinearLayout.setVisibility(View.GONE);
                 break;
         }
+    }
+
+
+    private void setUpSeekBars() {
+        speedSeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.speedSeekBar),
+                (TextView)findViewById(R.id.speedTextView),
+                false);
+        speedSeekBar.setMax(MessageGenerator.MAX_SPEED);
+        speedSeekBar.setMin(1);
+
+        speedSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+            @Override
+            public void onProgressChanged(double speed) {
+                mMessageGenerator.setGeneratorSpeed((int)speed);
+            }
+        });
+
+        bufferSizeSeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.bufferSizeSeekBar),
+                (TextView)findViewById(R.id.bufferSizeTextView),
+                false);
+        bufferSizeSeekBar.setMax(MessageGenerator.MAX_MESSAGE_SIZE);
+        bufferSizeSeekBar.setMin(MessageGenerator.MIN_MESSAGE_SIZE);
+
+        bufferSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+
+            @Override
+            public void onProgressChanged(double bufferSize) {
+                mMessageGenerator.setMessageSize((int)bufferSize);
+            }
+        });
+
+        symbolSizeSeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.symbolSizeSeekBar),
+                (TextView)findViewById(R.id.symbolSizeTextView),
+                false);
+        symbolSizeSeekBar.setMax(Sender.MAX_SYMBOL_SIZE);
+        symbolSizeSeekBar.setMin(5);
+
+        symbolSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+
+            @Override
+            public void onProgressChanged(double symbolSize) {
+                mScoreEncoder.getScoreSender().setSymbolSize((int)symbolSize);
+            }
+        });
+
+        generationSizeSeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.generationSizeSeekBar),
+                (TextView)findViewById(R.id.generationSizeTextView),
+                false);
+        generationSizeSeekBar.setMax(Sender.MAX_GENERATION_SIZE);
+        generationSizeSeekBar.setMin(1);
+
+        generationSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+            @Override
+            public void onProgressChanged(double generationSize) {
+                mScoreEncoder.getScoreSender().setGenerationSize((int)generationSize);
+            }
+        });
+
+        generationWindowSizeSeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.generationWindowSizeSeekBar),
+                (TextView)findViewById(R.id.generationWindowSizeTextView),
+                false);
+        generationWindowSizeSeekBar.setMax(Sender.MAX_GENERATION_SIZE);
+
+        generationWindowSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+            @Override
+            public void onProgressChanged(double generationWindowSize) {
+                mScoreEncoder.getScoreSender().setGenerationWindowSize((int)generationWindowSize);
+            }
+        });
+
+        dataRedundancySeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.dataRedundancySeekBar),
+                (TextView)findViewById(R.id.dataRedundancyTextView),
+                true);
+        dataRedundancySeekBar.setMax(500);
+        dataRedundancySeekBar.setMin(0);
+
+        dataRedundancySeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+            @Override
+            public void onProgressChanged(double dataRedundancy) {
+                mScoreEncoder.getScoreSender().setDataRedundancy((float)dataRedundancy / 100);
+            }
+        });
+
+        feedbackProbabilitySeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.feedbackProbabilitySeekBar),
+                (TextView)findViewById(R.id.feedbackProbabilityTextView),
+                true);
+        feedbackProbabilitySeekBar.setMax(100);
+        feedbackProbabilitySeekBar.setMin(0);
+
+        feedbackProbabilitySeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+            @Override
+            public void onProgressChanged(double feedbackProbability) {
+                mScoreEncoder.getScoreSender().setFeedbackProbability((float)feedbackProbability / 100);
+            }
+        });
     }
 }

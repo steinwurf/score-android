@@ -158,14 +158,19 @@ jobjectArray string_vector_to_java_string_array(
     return array;
 }
 
-std::vector<uint8_t> java_byte_array_to_vector(JNIEnv* env, jbyteArray jbuffer)
+std::vector<uint8_t> java_byte_array_to_vector(
+    JNIEnv* env, jbyteArray jbuffer, jint offset, jint size)
 {
-    uint8_t* data_ptr = (uint8_t*)env->GetByteArrayElements(jbuffer, JNI_FALSE);
-    jsize data_size = env->GetArrayLength(jbuffer);
+    auto jbuffer_ptr = env->GetByteArrayElements(jbuffer, JNI_FALSE);
+    auto jbuffer_size = env->GetArrayLength(jbuffer);
+    assert(jbuffer_size >= (offset + size));
+
+    uint8_t* data_ptr = (uint8_t*)jbuffer_ptr + offset;
+
     // The vector will copy the original data, so it is safe to release
     // the java byte array
-    std::vector<uint8_t> data(data_ptr, data_ptr + data_size);
-    env->ReleaseByteArrayElements(jbuffer, (jbyte*)data_ptr, JNI_ABORT);
+    std::vector<uint8_t> data(data_ptr, data_ptr + size);
+    env->ReleaseByteArrayElements(jbuffer, jbuffer_ptr, JNI_ABORT);
 
     return data;
 }

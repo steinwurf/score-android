@@ -2,9 +2,11 @@ package com.steinwurf.score;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.Formatter;
@@ -24,12 +26,14 @@ import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.net.InetAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Locale;
 
 
-public class ReceiverActivity extends AppCompatActivity {
+public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.IOnMessageHandler {
 
     private static final String TAG = ReceiverActivity.class.getSimpleName();
     private static final String RECEIVER_CONFIGURATION = "RECEIVER_CONFIGURATION";
@@ -39,7 +43,11 @@ public class ReceiverActivity extends AppCompatActivity {
 
     private static final int MAX_KEEPALIVE_INTERVAL = 500;
     private static final int MAX_DATAPOINTS = 100;
+    private final Handler handler = new Handler();
+
+    private Client mClient;
     private KeepAlive mKeepAlive;
+    private ScoreDecoder mScoreDecoder;
 
     enum State
     {
@@ -55,15 +63,12 @@ public class ReceiverActivity extends AppCompatActivity {
 
     private LinearLayout statusLinearLayout;
     ToggleButton keepAliveToggleButton;
-    TextView keepAliveIntervalTextView;
-    SeekBar keepAliveIntervalSeekBar;
+
+    private SeekBarHelper keepAliveIntervalSeekBar;
+
     private TextView statusTextView;
 
-    private LineGraphSeries<DataPoint> series = new LineGraphSeries<>();
-
     WifiManager.MulticastLock multicastLock;
-
-    private Client mClient;
 
     private View.OnClickListener connectOnClickListener = new View.OnClickListener() {
         @Override
@@ -83,10 +88,69 @@ public class ReceiverActivity extends AppCompatActivity {
         }
     };
 
-    long dataLoss = 0;
-    long dataOutOfOrder = 0;
-    Long lastId = null;
-    Long lastTimestamp = null;
+    // stats
+    private LineGraphSeries<DataPoint> goodPutSeries = new LineGraphSeries<>();
+    private LineGraphSeries<DataPoint> messageLossSeries = new LineGraphSeries<>();
+    private LineGraphSeries<DataPoint> packetLossSeries = new LineGraphSeries<>();
+    private LineGraphSeries<DataPoint> delaySeries = new LineGraphSeries<>();
+
+    private long messageCount = 0;
+    private long messageBytesReceived = 0;
+    private long messageLoss = 0;
+    private Long lastMessageId = null;
+    private Long lastMessageTimestamp = null;
+    private Long lastMessageSize = null;
+
+    private long packetCount = 0;
+    private long packetBytesReceived = 0;
+    private long packetLoss = 0;
+    private Long lastPacketId = null;
+    private Long lastPacketTimestamp = null;
+    private Long lastPacketSize = null;
+
+    private Long currentMessageId = null;
+
+    private long UI_UPDATE_RATE = 100;
+    private Runnable updateStats = new Runnable() {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    float packetLossPercentage = packetCount == 0 ? 0 : ((float)packetLoss / (float)packetCount) * 100;
+                    float messageLossPercentage = messageCount == 0 ? 0 : ((float)messageLoss / (float)messageCount) * 100;
+                    float goodput = ((float)messageBytesReceived / (float)packetBytesReceived) * 100;
+                    packetLossSeries.appendData(new DataPoint(packetLossSeries.getHighestValueX() + 1, packetLossPercentage), true, MAX_DATAPOINTS);
+                    messageLossSeries.appendData(new DataPoint(messageLossSeries.getHighestValueX() + 1, messageLossPercentage), true, MAX_DATAPOINTS);
+                    goodPutSeries.appendData(new DataPoint(goodPutSeries.getHighestValueX() + 1, goodput), true, MAX_DATAPOINTS);
+
+                    long delay = 0;
+                    if (lastMessageTimestamp != null)
+                        delay = lastPacketTimestamp - lastMessageTimestamp;
+                    delaySeries.appendData(new DataPoint(delaySeries.getHighestValueX() + 1, delay), true, MAX_DATAPOINTS);
+                    long messagesBehind = 0;
+                    if (currentMessageId != null && lastMessageId != null)
+                    {
+                        messagesBehind = currentMessageId - lastMessageId;
+                    }
+
+                    String format = (
+                            "Count : %d pkt / %d msg\n" +
+                            "Loss  : %d pkt / %d msg - %.2f / %.2f %%\n" +
+                            "Bytes : %d pkt / %d msg - goodput: %.2f %%\n" +
+                            "Delay : %d ms / %d msg");
+                    statusTextView.setText(String.format(Locale.getDefault(),
+                            format,
+                            packetCount, messageCount,
+                            packetLoss, messageLoss, packetLossPercentage, messageLossPercentage,
+                            packetBytesReceived, messageBytesReceived, goodput,
+                            delay,
+                            messagesBehind));
+                }
+            });
+            handler.postDelayed(this, UI_UPDATE_RATE);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +165,7 @@ public class ReceiverActivity extends AppCompatActivity {
         assert wm != null;
 
         mClient = new Client();
+        mScoreDecoder = new ScoreDecoder(this);
         mKeepAlive = createKeepAlive(wm, keepAliveInterval);
 
         connectButton = findViewById(R.id.connectButton);
@@ -111,32 +176,23 @@ public class ReceiverActivity extends AppCompatActivity {
 
         statusLinearLayout = findViewById(R.id.statusLinearLayout);
         keepAliveToggleButton = findViewById(R.id.keepAliveToggleButton);
-        keepAliveIntervalTextView = findViewById(R.id.keepAliveIntervalTextView);
-        keepAliveIntervalSeekBar = findViewById(R.id.keepAliveIntervalSeekBar);
+        keepAliveIntervalSeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.keepAliveIntervalSeekBar),
+                (TextView)findViewById(R.id.keepAliveIntervalTextView),
+                false);
+        keepAliveIntervalSeekBar.setMax(MAX_KEEPALIVE_INTERVAL);
+
         statusTextView = findViewById(R.id.statusTextView);
 
-        setupGrapView();
+        setupGraphView();
 
-        keepAliveIntervalSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        keepAliveIntervalSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                float percentage = i / (float)seekBar.getMax();
-                int interval = i == 0 ? 1 : (int)(percentage * MAX_KEEPALIVE_INTERVAL);
-
-                keepAliveIntervalTextView.setText(Integer.toString(interval));
-                mKeepAlive.setInterval(interval);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
+            public void onProgressChanged(double value) {
+                mKeepAlive.setInterval((int)value);
             }
         });
+
 
         keepAliveToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -149,9 +205,15 @@ public class ReceiverActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.resetButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                resetStats();
+            }
+        });
+
         ipEditText.setText(preferences.getString(RECEIVER_IP, "224.0.0.251"));
         portEditText.setText(preferences.getString(RECEIVER_PORT, "9010"));
-        keepAliveIntervalSeekBar.setProgress(1);
         keepAliveIntervalSeekBar.setProgress(keepAliveInterval);
 
         multicastLock = wm.createMulticastLock(TAG);
@@ -177,31 +239,43 @@ public class ReceiverActivity extends AppCompatActivity {
         return null;
     }
 
-    private void setupGrapView() {
-        GraphView lossGraphView = findViewById(R.id.lossGraphView);
+    private void setupGraphView() {
+        GraphView graphView = findViewById(R.id.lossGraphView);
         int colorPrimaryDark = ContextCompat.getColor(this, R.color.colorPrimaryDark);
         int colorPrimary = ContextCompat.getColor(this, R.color.colorPrimary);
-        lossGraphView.getGridLabelRenderer().setHorizontalLabelsColor(colorPrimaryDark);
-        lossGraphView.getGridLabelRenderer().setVerticalLabelsColor(colorPrimaryDark);
+        graphView.getGridLabelRenderer().setHorizontalLabelsColor(colorPrimaryDark);
+        graphView.getGridLabelRenderer().setVerticalLabelsColor(colorPrimaryDark);
 
-        lossGraphView.getViewport().setYAxisBoundsManual(true);
-        lossGraphView.getViewport().setMinY(0);
-        lossGraphView.getViewport().setMaxY(2050);
-        lossGraphView.getViewport().setXAxisBoundsManual(true);
-        lossGraphView.getViewport().setMinX(0);
-        lossGraphView.getViewport().setMaxX(MAX_DATAPOINTS);
+        graphView.getViewport().setYAxisBoundsManual(true);
+        graphView.getViewport().setMinY(0);
+        graphView.getViewport().setMaxY(100);
+        graphView.getViewport().setXAxisBoundsManual(true);
+        graphView.getViewport().setMinX(0);
+        graphView.getViewport().setMaxX(MAX_DATAPOINTS);
 
-        series.setThickness(5);
-        series.setColor(colorPrimary);
-        lossGraphView.addSeries(series);
+        packetLossSeries.setThickness(5);
+        packetLossSeries.setColor(Color.RED);
+        graphView.addSeries(packetLossSeries);
 
+        messageLossSeries.setThickness(5);
+        messageLossSeries.setColor(Color.YELLOW);
+        graphView.addSeries(messageLossSeries);
 
+        goodPutSeries.setThickness(5);
+        goodPutSeries.setColor(colorPrimary);
+        graphView.addSeries(goodPutSeries);
+
+        delaySeries.setThickness(5);
+        delaySeries.setColor(Color.BLUE);
+        graphView.getSecondScale().setMaxY(5000);
+        graphView.getSecondScale().setMinY(0);
+        graphView.addSeries(delaySeries);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mClient.setHandler(new Client.IClientHandler() {
+        mClient.setClientHandler(new Client.IClientHandler() {
             @Override
             public void onStarted() {
                 runOnUiThread(new Runnable() {
@@ -231,47 +305,48 @@ public class ReceiverActivity extends AppCompatActivity {
                     }
                 });
             }
+        });
 
+        mClient.setOnDataHandler(new Client.IOnDataHandler() {
             @Override
-            public void onData(final ByteBuffer buffer) {
+            public void onData(SocketAddress senderAddress, final ByteBuffer buffer) {
 
                 buffer.order(ByteOrder.BIG_ENDIAN);
                 long id = buffer.getInt() & 0x00000000ffffffffL;
-                long timestamp = buffer.getLong() & 0x00000000ffffffffL;
+                long timestamp = buffer.getLong();
+                currentMessageId = buffer.getInt() & 0x00000000ffffffffL;
 
-                if (lastTimestamp != null && lastId != null)
+                lastPacketSize = (long)buffer.limit();
+                if (lastPacketTimestamp != null && lastPacketId != null)
                 {
-                    if (lastTimestamp > timestamp)
+                    if (lastPacketTimestamp > timestamp)
                     {
-                        dataOutOfOrder += 1;
-                        dataLoss -= 1;
+                        Log.w(TAG, "OutOfOrder packet received");
                     }
                     else
                     {
-                        dataLoss += calculateLoss(lastId, id);
+                        packetLoss += calculateLoss(lastPacketId, id);
                     }
                 }
-                lastTimestamp = timestamp;
-                lastId = id;
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        double x = series.getHighestValueX() + 1;
-                        series.appendData(new DataPoint(x, buffer.remaining()), true, MAX_DATAPOINTS);
-                        statusTextView.setText(String.format("Data loss: %d\nData Out of Order: %d", dataLoss, dataOutOfOrder));
-                    }
-                });
+                lastPacketTimestamp = timestamp;
+                lastPacketId = id;
+                packetCount += 1;
+                packetBytesReceived += buffer.limit();
+                mScoreDecoder.onData(senderAddress, buffer);
             }
         });
+
         changeState(State.disconnected);
+        handler.post(updateStats);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        mClient.setHandler(null);
+        handler.removeCallbacks(updateStats);
+        mClient.setClientHandler(null);
+        mClient.setOnDataHandler(null);
         mClient.stop();
         mKeepAlive.stop();
     }
@@ -290,8 +365,51 @@ public class ReceiverActivity extends AppCompatActivity {
         multicastLock.release();
     }
 
-    void changeState(State newState)
+    @Override
+    public void onMessage(ByteBuffer message) {
+
+        message.order(ByteOrder.BIG_ENDIAN);
+        long id = message.getInt() & 0x00000000ffffffffL;
+        long timestamp = message.getLong();
+
+        lastMessageSize = (long)message.limit();
+
+        if (lastMessageTimestamp != null && lastMessageId != null)
+        {
+            messageLoss += calculateLoss(lastMessageId, id);
+        }
+        lastMessageTimestamp = timestamp;
+        lastMessageId = id;
+        messageCount += 1;
+        messageBytesReceived += message.limit();
+    }
+
+    private void resetStats()
     {
+        messageCount = 0;
+        messageBytesReceived = 0;
+        messageLoss = 0;
+        lastMessageId = null;
+        lastMessageTimestamp = null;
+        lastMessageSize = null;
+
+        packetCount = 0;
+        packetBytesReceived = 0;
+        packetLoss = 0;
+        lastPacketId = null;
+        lastPacketTimestamp = null;
+        lastPacketSize = null;
+        packetLossSeries.resetData(new DataPoint[]{});
+        messageLossSeries.resetData(new DataPoint[]{});
+        goodPutSeries.resetData(new DataPoint[]{});
+        delaySeries.resetData(new DataPoint[]{});
+
+        currentMessageId = null;
+    }
+
+    private void changeState(State newState)
+    {
+        resetStats();
         switch (newState)
         {
             case connected:

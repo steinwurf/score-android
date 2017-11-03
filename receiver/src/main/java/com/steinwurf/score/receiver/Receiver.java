@@ -35,36 +35,49 @@ public class Receiver
      * Returns if the receiver has any outgoing messages at the moment.
      * @return true if the receiver has outgoing messages
      */
-
     public native boolean hasOutgoingMessage();
+
     /**
      * Returns the number of outgoing messages available in the receiver.
      * @return the number of outgoing messages
      */
-
     public native int outgoingMessages();
+
     /**
      * Returns an outgoing feedback message from the receiver that should be
      * transmitted to the sender.
      * @return the outgoing feedback message
      */
-
     public native byte[] getOutgoingMessage();
+
     /**
      * Processes an incoming data message from the sender. The internal
      * state of the receiver might change: it can decode some original messages
      * and it might schedule additional feedback messages.
      * @param buffer the buffer containing the data message
      */
+    public void receiveMessage(byte[] buffer)
+    {
+        receiveMessage(buffer, 0, buffer.length);
+    }
 
-    public native void receiveMessage(byte[] buffer);
+    /**
+     * Processes an incoming data message from the sender. The internal
+     * state of the receiver might change: it can decode some original messages
+     * and it might schedule additional feedback messages.
+     * @param buffer the buffer containing the data message
+     * @param offset the offset into the buffer
+     * @param size the size of the buffer
+     */
+    public native void receiveMessage(byte[] buffer, int offset, int size);
+
     /**
      * Returns true if the receiver has decoded any original messages that can be
      * extracted with {@link #getData()}.
      * @return true if the receiver has any original messages
      */
-
     public native boolean dataAvailable();
+
     /**
      * Returns an original atomic message that was added to the sender.
      * The in-order delivery of the messages is guaranteed,
@@ -72,6 +85,16 @@ public class Receiver
      * @return the decoded original message
      */
     public native byte[] getData();
+
+    /**
+     * Finalizes the object and it's underlying native part.
+     */
+    @Override
+    protected void finalize() throws Throwable
+    {
+        finalize(pointer);
+        super.finalize();
+    }
 
     /**
      * Finalizes the underlying native part.

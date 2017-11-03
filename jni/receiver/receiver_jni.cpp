@@ -65,9 +65,9 @@ jbyteArray Java_com_steinwurf_score_receiver_Receiver_getOutgoingMessage(
 }
 
 void Java_com_steinwurf_score_receiver_Receiver_receiveMessage(
-    JNIEnv* env, jobject thiz, jbyteArray jbuffer)
+    JNIEnv* env, jobject thiz, jbyteArray jbuffer, jint offset, jint size)
 {
-    auto buffer = jutils::java_byte_array_to_vector(env, jbuffer);
+    auto buffer = jutils::java_byte_array_to_vector(env, jbuffer, offset, size);
     auto& receiver = jutils::get_native<score::api::receiver>(env, thiz);
     std::error_code error;
     receiver.receive_message(buffer, error);

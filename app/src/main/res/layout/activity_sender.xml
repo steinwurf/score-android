@@ -60,6 +60,12 @@
                 android:text="@string/controls"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/network"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -71,8 +77,9 @@
                         android:text="@string/speed"/>
 
                     <Space
-                        android:layout_width="4dp"
-                        android:layout_height="wrap_content"/>
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
 
                     <TextView
                         android:id="@+id/speedTextView"
@@ -107,13 +114,15 @@
                         android:text="@string/buffer_size"/>
 
                     <Space
-                        android:layout_width="4dp"
-                        android:layout_height="wrap_content"/>
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
 
                     <TextView
                         android:id="@+id/bufferSizeTextView"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:text="0"/>
 
                     <Space
                         android:layout_width="4dp"
@@ -131,5 +140,197 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="100"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/protocol"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/symbol_size"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/symbolSizeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"/>
+
+                <Space
+                    android:layout_width="4dp"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bytes"/>
+
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/symbolSizeSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="200"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/generation_size"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/generationSizeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"/>
+
+                <Space
+                    android:layout_width="4dp"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/symbols"/>
+
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/generationSizeSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="250"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/generation_window_size"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/generationWindowSizeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"/>
+
+                <Space
+                    android:layout_width="4dp"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/generations"/>
+
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/generationWindowSizeSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="250"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/data_redundancy"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/dataRedundancyTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"/>
+
+                <Space
+                    android:layout_width="4dp"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/percent"/>
+
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/dataRedundancySeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="250"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/feedback_probability"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/feedbackProbabilityTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"/>
+
+                <Space
+                    android:layout_width="4dp"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/percent"/>
+
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/feedbackProbabilitySeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"/>
         </LinearLayout>
+
 </LinearLayout>

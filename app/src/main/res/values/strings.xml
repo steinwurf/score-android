@@ -18,4 +18,16 @@
     <string name="keep_alive">Keep Alive</string>
     <string name="interval">Interval</string>
     <string name="ms">ms</string>
+    <string name="reset">Reset</string>
+    <string name="statistics">Statistics</string>
+    <string name="data_redundancy">Data Redundancy</string>
+    <string name="feedback_probability">Feedback Probability</string>
+    <string name="generation_size">Generation Size</string>
+    <string name="generation_window_size">Generation Window Size</string>
+    <string name="generations">Generations</string>
+    <string name="symbol_size">Symbol Size</string>
+    <string name="symbols">Symbols</string>
+    <string name="network">Network</string>
+    <string name="protocol">Protocol</string>
+    <string name="percent">%</string>
 </resources>

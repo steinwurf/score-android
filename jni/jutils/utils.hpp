@@ -35,7 +35,8 @@ jobjectArray string_vector_to_java_string_array(
     JNIEnv* env, const std::vector<std::string>& strings);
 jlong get_jlong_pointer_field(JNIEnv* env, jobject object);
 
-std::vector<uint8_t> java_byte_array_to_vector(JNIEnv* env, jbyteArray jbuffer);
+std::vector<uint8_t> java_byte_array_to_vector(
+    JNIEnv* env, jbyteArray jbuffer, jint offset, jint size);
 
 template<class T>
 T* get_native_pointer(JNIEnv* env, jobject object)

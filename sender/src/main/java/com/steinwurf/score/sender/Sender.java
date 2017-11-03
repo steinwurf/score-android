@@ -7,11 +7,15 @@ package com.steinwurf.score.sender;
 @SuppressWarnings("JniMissingFunction")
 public class Sender
 {
+    public static final int MAX_SYMBOL_SIZE = 2000;
+    public static final int MAX_GENERATION_SIZE = 500;
+
     static
     {
         // Load the native sender library
         System.loadLibrary("sender_jni");
     }
+
     /**
      * A long representing a pointer to the underlying native object.
      */
@@ -33,10 +37,20 @@ public class Sender
 
     /**
      * Writes a complete atomic message to the bitstream.
-     * @param data The message to write to the bitstream.
+     * @param buffer The buffer containing message to write to the bitstream.
      */
-    public native void writeData(byte[] data);
+    public void writeData(byte[] buffer)
+    {
+        writeData(buffer, 0, buffer.length);
+    }
 
+    /**
+     * Writes a complete atomic message to the bitstream.
+     * @param buffer The buffer containing the message to write to the bitstream.
+     * @param offset the offset of the buffer
+     * @param size the size of the buffer
+     */
+    public native void writeData(byte[] buffer, int offset, int size);
 
     /**
      * Fills up the current input generation with zeros, and makes sure
@@ -46,7 +60,6 @@ public class Sender
      */
     public native void flush();
 
-
     /**
      * Returns if the sender has any outgoing messages at the moment.
      * To check that a sender is totally empty, this function should return
@@ -54,7 +67,6 @@ public class Sender
      * @return true if the sender has outgoing messages
      */
     public native boolean hasOutgoingMessage();
-
 
     /**
      * Returns the number of outgoing messages available in the sender.
@@ -68,13 +80,28 @@ public class Sender
      * @return the outgoing data message
      */
     public native byte[] getOutgoingMessage();
+
     /**
      * Processes an incoming feedback message from the receiver. The internal
      * state of the sender might change and it might schedule data messages
      * that are missing on the receiver.
      * @param buffer the buffer containing the feedback message
      */
-    public native void receiveMessage(byte[] buffer);
+    public void receiveMessage(byte[] buffer)
+    {
+        receiveMessage(buffer, 0, buffer.length);
+    }
+
+    /**
+     * Processes an incoming feedback message from the receiver. The internal
+     * state of the sender might change and it might schedule data messages
+     * that are missing on the receiver.
+     * @param buffer the buffer containing the feedback message
+     * @param offset the offset of the buffer
+     * @param size the size of the buffer
+     */
+    public native void receiveMessage(byte[] buffer, int offset, int size);
+
     /**
      * Set the symbol size.
      * Has no effect on current active encoders.
@@ -87,8 +114,8 @@ public class Sender
      * Has no effect on current active encoders
      * @param symbols the number of symbols in the next created generation
      */
-
     public native void setGenerationSize(int symbols);
+
     /**
      * Set the amount of supported generations 'back in time'.
      * @param generations the number of old generations
@@ -144,7 +171,17 @@ public class Sender
     public native int generationSize();
 
     /**
-     * Finalize the underlying native part.
+     * Finalizes the object and it's underlying native part.
+     */
+    @Override
+    protected void finalize() throws Throwable
+    {
+        finalize(pointer);
+        super.finalize();
+    }
+
+    /**
+     * Finalizes the underlying native part.
      * @param pointer A long representing a pointer to the underlying native object.
      */
     private native void finalize(long pointer);

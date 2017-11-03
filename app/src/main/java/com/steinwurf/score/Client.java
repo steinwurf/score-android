@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
 class Client {
@@ -17,19 +18,27 @@ class Client {
         void onStarted();
         void onError(String reason);
         void onStopped();
-        void onData(ByteBuffer data);
+    }
+    interface IOnDataHandler
+    {
+        void onData(SocketAddress senderAddress, ByteBuffer data);
     }
 
-    private IClientHandler handler;
+    private IClientHandler clientHandler;
+    private IOnDataHandler onDataHandler;
     private MulticastSocket socket;
 
     private final byte[] receiveBuffer = new byte[2000];
 
     private Thread connectionHandler = null;
 
-    void setHandler(IClientHandler handler)
+    void setClientHandler(IClientHandler handler)
     {
-        this.handler = handler;
+        this.clientHandler = handler;
+    }
+    void setOnDataHandler(IOnDataHandler handler)
+    {
+        this.onDataHandler = handler;
     }
 
     void start(final String ipString, final String portString) {
@@ -43,29 +52,30 @@ class Client {
                     socket.joinGroup(ip);
 
                     Log.d(TAG, "started");
-                    if (handler != null)
-                        handler.onStarted();
+                    if (clientHandler != null)
+                        clientHandler.onStarted();
 
                     /// Read
                     while(true)
                     {
                         DatagramPacket packet = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                         socket.receive(packet);
-                        if (handler != null) {
+
+                        if (onDataHandler != null) {
                             ByteBuffer buffer = ByteBuffer.wrap(
                                     packet.getData(),
                                     packet.getOffset(),
                                     packet.getLength());
-                            handler.onData(buffer);
+                            onDataHandler.onData(packet.getSocketAddress(), buffer);
                         }
                     }
 
                 } catch (IOException | NumberFormatException e) {
                     e.printStackTrace();
                     Log.d(TAG, "stopped");
-                    if (handler != null) {
-                        handler.onError(e.toString());
-                        handler.onStopped();
+                    if (clientHandler != null) {
+                        clientHandler.onError(e.toString());
+                        clientHandler.onStopped();
                     }
                 }
             }
@@ -80,11 +90,11 @@ class Client {
             try {
                 connectionHandler.join();
             } catch (InterruptedException e) {
-                handler.onError(e.toString());
+                clientHandler.onError(e.toString());
             }
         }
         Log.d(TAG, "stopped");
-        if (handler != null)
-            handler.onStopped();
+        if (clientHandler != null)
+            clientHandler.onStopped();
     }
 }

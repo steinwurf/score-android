@@ -54,6 +54,29 @@
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/statistics"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+            <Button
+                android:id="@+id/resetButton"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reset" />
+        </LinearLayout>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -113,20 +136,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </LinearLayout>
-
         </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Data"/>
 
         <TextView
             android:id="@+id/statusTextView"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-        <RelativeLayout
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:typeface="monospace" />
+        <com.jjoe64.graphview.GraphView
+            android:id="@+id/lossGraphView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <com.jjoe64.graphview.GraphView
-                android:id="@+id/lossGraphView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-        </RelativeLayout>
+            android:layout_height="match_parent"/>
     </LinearLayout>
 </LinearLayout>
