@@ -1,5 +1,6 @@
 package com.steinwurf.score;
 
+import android.os.Handler;
 import android.util.Log;
 
 import com.steinwurf.score.sender.Sender;
@@ -13,16 +14,15 @@ import java.util.Random;
 class ScoreEncoder {
 
     private static final String TAG = ScoreEncoder.class.getSimpleName();
-    static final int MAX_MESSAGE_SIZE = 2000;
+    static final int MAX_MESSAGE_SIZE = 10000;
     static final int MIN_MESSAGE_SIZE = 4 + 8;
-    static final int MAX_SPEED = 20000; // bytes per second
+    static final int MAX_SPEED = 100000; // bytes per second
 
     interface IOnDataHandler
     {
         void onData(byte[] data);
     }
 
-    private final Random random = new Random();
     private final Sender encoder;
 
     private Thread mThread;
@@ -34,8 +34,8 @@ class ScoreEncoder {
     private int packetId = 0;
     private boolean running = false;
 
-    public ScoreEncoder(Sender scoreEncoder) {
-        encoder = scoreEncoder;
+    ScoreEncoder() {
+        encoder = new Sender();
     }
 
     void setMessageSize(int messageSize)
@@ -54,7 +54,7 @@ class ScoreEncoder {
             mThread.interrupt();
     }
 
-    void start(final IOnDataHandler handler)
+    void start(final IOnDataHandler onDataHandler)
     {
         Log.d(TAG, "start");
         running = true;
@@ -66,16 +66,15 @@ class ScoreEncoder {
                     try {
                         Thread.sleep(timeBetweenTransfers());
 
-                        ByteBuffer buffer = ByteBuffer.allocate(messageSize);
-                        random.nextBytes(buffer.array());
-                        buffer.order(ByteOrder.BIG_ENDIAN);
+                        ByteBuffer message = ByteBuffer.allocate(messageSize);
+                        message.order(ByteOrder.BIG_ENDIAN);
 
-                        buffer.putInt(messageId); // 4
-                        buffer.putLong(System.currentTimeMillis()); // 8
-                        assert buffer.position() == MIN_MESSAGE_SIZE;
+                        message.putInt(messageId); // 4
+                        message.putLong(System.currentTimeMillis()); // 8
+                        assert message.position() == MIN_MESSAGE_SIZE;
                         messageId++;
-                        encoder.writeData(buffer.array());
-                        while (encoder.hasOutgoingMessage())
+                        encoderWriteData(message.array());
+                        while (encoderHasOutgoingMessage())
                         {
                             ByteBuffer header = ByteBuffer.allocate(16);
                             header.order(ByteOrder.BIG_ENDIAN);
@@ -84,12 +83,12 @@ class ScoreEncoder {
                             header.putInt(messageId); // 4
                             packetId++;
 
-                            byte[] message = encoder.getOutgoingMessage();
-                            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                            byte[] packetData = encoderGetOutgoingMessage();
+                            ByteArrayOutputStream packet = new ByteArrayOutputStream();
                             try {
-                                outputStream.write(header.array());
-                                outputStream.write(message);
-                                handler.onData(outputStream.toByteArray());
+                                packet.write(header.array());
+                                packet.write(packetData);
+                                onDataHandler.onData(packet.toByteArray());
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -121,4 +120,39 @@ class ScoreEncoder {
     {
         return (long)((float) messageSize / (float)speed * 1000.0);
     }
+
+    private synchronized boolean encoderHasOutgoingMessage() {
+        return encoder.hasOutgoingMessage();
+    }
+
+    private synchronized void encoderWriteData(byte[] data) {
+        encoder.writeData(data);
+    }
+
+    private synchronized byte[] encoderGetOutgoingMessage() {
+        return encoder.getOutgoingMessage();
+    }
+
+    synchronized void setSymbolSize(int symbolSize) {
+        encoder.setSymbolSize(symbolSize);
+    }
+
+    synchronized void setGenerationSize(int generationSize) {
+        encoder.setGenerationSize(generationSize);
+    }
+
+    synchronized void setGenerationWindowSize(int generationWindowSize) {
+        encoder.setGenerationWindowSize(generationWindowSize);
+    }
+
+    synchronized void setDataRedundancy(float dataRedundancy) {
+        encoder.setDataRedundancy(dataRedundancy);
+
+    }
+
+    synchronized void setFeedbackProbability(float feedbackProbability) {
+        encoder.setFeedbackProbability(feedbackProbability);
+    }
+
+
 }

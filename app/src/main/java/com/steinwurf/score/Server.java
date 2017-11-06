@@ -42,6 +42,7 @@ class Server implements ScoreEncoder.IOnDataHandler {
                     port = Integer.parseInt(portString);
                     ip = InetAddress.getByName(ipString);
                     socket = new MulticastSocket(port);
+                    socket.setLoopbackMode(/*disabled=*/ true);
                     socket.joinGroup(ip);
 
                     Log.d(TAG, "started");

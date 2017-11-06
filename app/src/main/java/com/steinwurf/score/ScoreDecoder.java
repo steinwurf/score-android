@@ -20,6 +20,7 @@ public class ScoreDecoder {
     private long packetsReceived = 0;
     private long packetsLost = 0;
     private long totalPackets = 0;
+    private long lastPacketSize = 0;
 
     // Message
     private Long firstMessageId = null; // The ID of the first decoded message
@@ -30,6 +31,7 @@ public class ScoreDecoder {
     private long messagesReceived = 0;
     private long messagesLost = 0;
     private long totalMessages = 0;
+    private long lastMessageSize = 0;
 
     private final Receiver decoder = new Receiver();
 
@@ -38,7 +40,8 @@ public class ScoreDecoder {
         long packetId = data.getInt() & 0x00000000ffffffffL;
         long packetTimestamp = data.getLong();
         latestMessageId = data.getInt() & 0x00000000ffffffffL;
-        packetBytesReceived += data.limit();
+        lastPacketSize = data.remaining();
+        packetBytesReceived += lastPacketSize;
 
         if (firstPacketId == null) {
             firstPacketId = packetId;
@@ -77,7 +80,8 @@ public class ScoreDecoder {
         message.order(ByteOrder.BIG_ENDIAN);
         long messageId = message.getInt() & 0x00000000ffffffffL;
         long messageTimestamp = message.getLong();
-        messageBytesReceived += message.limit();
+        lastMessageSize = message.limit();
+        messageBytesReceived += lastMessageSize;
 
         if (firstMessageId == null) {
             firstMessageId = messageId;
@@ -108,6 +112,7 @@ public class ScoreDecoder {
         packetsReceived = 0;
         packetsLost = 0;
         totalPackets = 0;
+        lastPacketSize = 0;
 
         // Message
         firstMessageId = null;
@@ -118,6 +123,7 @@ public class ScoreDecoder {
         messagesReceived = 0;
         messagesLost = 0;
         totalMessages = 0;
+        lastMessageSize = 0;
     }
 
     float messageLossPercentage()
@@ -165,5 +171,12 @@ public class ScoreDecoder {
     }
 
 
+    public long getLastPacketSize() {
+        return lastPacketSize;
+    }
+
+    public long getLastMessageSize() {
+        return lastMessageSize;
+    }
 }
 

@@ -2,9 +2,13 @@ package com.steinwurf.score;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.TrafficStats;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,6 +23,8 @@ public class SenderActivity extends AppCompatActivity {
 
     private static final String TAG = SenderActivity.class.getSimpleName();
     private static final String SENDER_CONFIGURATION = "SENDER_CONFIGURATION";
+
+    private static final int UI_UPDATE_RATE = 500;
 
     // network
     private static final String SENDER_PORT = "SENDER_PORT";
@@ -40,6 +46,65 @@ public class SenderActivity extends AppCompatActivity {
         intermediate
     }
 
+    private final ScoreEncoder encoder = new ScoreEncoder();
+    private final Server server = new Server(encoder);
+
+
+    private final View.OnClickListener connectOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            changeState(State.intermediate);
+            String ipString = ipEditText.getText().toString();
+            String portString = portEditText.getText().toString();
+            server.start(ipString, portString);
+        }
+    };
+
+    private final View.OnClickListener disconnectOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            changeState(State.intermediate);
+            server.stop();
+        }
+    };
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable updateUI = new Runnable() {
+
+        private final int uid = android.os.Process.myUid();
+
+        private final double intervalSeconds = UI_UPDATE_RATE * 0.001;
+
+        private double previousReceived;
+        private double previousSent;
+
+        @Override
+        public void run() {
+
+            double totalBytesReceived = TrafficStats.getUidRxBytes(uid);
+            double totalBytesSent = TrafficStats.getUidTxBytes(uid);
+
+            if (totalBytesReceived == TrafficStats.UNSUPPORTED || totalBytesSent == TrafficStats.UNSUPPORTED) {
+                Log.w(TAG, "The use of TrafficStats is not supported on this device.");
+                return;
+            }
+
+            if (previousReceived >= 0 && previousSent >= 0) {
+
+                double received = (totalBytesReceived - previousReceived) / intervalSeconds;
+                double sent = (totalBytesSent - previousSent) / intervalSeconds;
+                String format = "Received: %8s/s Sent: %12s/s";
+                networkStatsTextView.setText(String.format(format, Utils.bytesToPrettyString(received), Utils.bytesToPrettyString(sent)));
+            }
+            previousReceived = totalBytesReceived;
+            previousSent = totalBytesSent;
+
+            handler.postDelayed(this, UI_UPDATE_RATE);
+        }
+    };
+
+    WifiManager.MulticastLock multicastLock;
+
     private Button connectButton;
 
     private LinearLayout configurationLinearLayout;
@@ -47,6 +112,8 @@ public class SenderActivity extends AppCompatActivity {
     private EditText portEditText;
 
     private LinearLayout controlLinearLayout;
+
+    TextView networkStatsTextView;
 
     // Network
     private SeekBarHelper speedSeekBar;
@@ -57,30 +124,6 @@ public class SenderActivity extends AppCompatActivity {
     private SeekBarHelper generationWindowSizeSeekBar;
     private SeekBarHelper dataRedundancySeekBar;
     private SeekBarHelper feedbackProbabilitySeekBar;
-
-    WifiManager.MulticastLock multicastLock;
-
-    private final Sender scoreEncoder = new Sender();
-    private final ScoreEncoder encoder = new ScoreEncoder(scoreEncoder);
-    private final Server server = new Server(encoder);
-
-    private View.OnClickListener connectOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            changeState(State.intermediate);
-            String ipString = ipEditText.getText().toString();
-            String portString = portEditText.getText().toString();
-            server.start(ipString, portString);
-        }
-    };
-
-    private View.OnClickListener disconnectOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            changeState(State.intermediate);
-            server.stop();
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +138,8 @@ public class SenderActivity extends AppCompatActivity {
         portEditText = findViewById(R.id.portEditText);
 
         controlLinearLayout = findViewById(R.id.controlLinearLayout);
+
+        networkStatsTextView = findViewById(R.id.networkStatsTextView);
 
         setUpSeekBars();
     }
@@ -154,11 +199,13 @@ public class SenderActivity extends AppCompatActivity {
         assert wm != null;
         multicastLock = wm.createMulticastLock(TAG);
         multicastLock.acquire();
+        handler.post(updateUI);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        handler.removeCallbacks(updateUI);
         server.setServerHandler(null);
         server.stop();
 
@@ -253,7 +300,7 @@ public class SenderActivity extends AppCompatActivity {
 
             @Override
             public void onProgressChanged(double symbolSize) {
-                scoreEncoder.setSymbolSize((int)symbolSize);
+                encoder.setSymbolSize((int)symbolSize);
             }
         });
 
@@ -267,7 +314,7 @@ public class SenderActivity extends AppCompatActivity {
         generationSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double generationSize) {
-                scoreEncoder.setGenerationSize((int)generationSize);
+                encoder.setGenerationSize((int)generationSize);
             }
         });
 
@@ -280,7 +327,7 @@ public class SenderActivity extends AppCompatActivity {
         generationWindowSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double generationWindowSize) {
-                scoreEncoder.setGenerationWindowSize((int)generationWindowSize);
+                encoder.setGenerationWindowSize((int)generationWindowSize);
             }
         });
 
@@ -294,7 +341,7 @@ public class SenderActivity extends AppCompatActivity {
         dataRedundancySeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double dataRedundancy) {
-                scoreEncoder.setDataRedundancy((float)dataRedundancy / 100);
+                encoder.setDataRedundancy((float)dataRedundancy / 100);
             }
         });
 
@@ -308,7 +355,7 @@ public class SenderActivity extends AppCompatActivity {
         feedbackProbabilitySeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double feedbackProbability) {
-                scoreEncoder.setFeedbackProbability((float)feedbackProbability / 100);
+                encoder.setFeedbackProbability((float)feedbackProbability / 100);
             }
         });
     }

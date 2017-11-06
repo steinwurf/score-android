@@ -7,6 +7,7 @@ import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.Formatter;
@@ -40,12 +41,6 @@ public class ReceiverActivity extends AppCompatActivity {
     private static final int UI_UPDATE_RATE = 100;
     private static final int MAX_KEEPALIVE_INTERVAL = 500;
     private static final int MAX_DATAPOINTS = 100;
-    private final Handler handler = new Handler();
-
-    private final ScoreDecoder decoder = new ScoreDecoder();
-    private final Client client = new Client(decoder);
-
-    private KeepAlive mKeepAlive;
 
     enum State
     {
@@ -54,21 +49,10 @@ public class ReceiverActivity extends AppCompatActivity {
         intermediate
     }
 
-    private Button connectButton;
-    private LinearLayout configurationLinearLayout;
-    private EditText ipEditText;
-    private EditText portEditText;
+    private final ScoreDecoder decoder = new ScoreDecoder();
+    private final Client client = new Client(decoder);
 
-    private LinearLayout statusLinearLayout;
-    ToggleButton keepAliveToggleButton;
-
-    private SeekBarHelper keepAliveIntervalSeekBar;
-
-    private TextView statusTextView;
-
-    WifiManager.MulticastLock multicastLock;
-
-    private View.OnClickListener connectOnClickListener = new View.OnClickListener() {
+    private final View.OnClickListener connectOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
             changeState(State.intermediate);
@@ -78,7 +62,7 @@ public class ReceiverActivity extends AppCompatActivity {
         }
     };
 
-    private View.OnClickListener disconnectOnClickListener = new View.OnClickListener() {
+    private final View.OnClickListener disconnectOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
             changeState(State.intermediate);
@@ -87,12 +71,13 @@ public class ReceiverActivity extends AppCompatActivity {
     };
 
     // stats
-    private LineGraphSeries<DataPoint> goodPutSeries = new LineGraphSeries<>();
-    private LineGraphSeries<DataPoint> messageLossSeries = new LineGraphSeries<>();
-    private LineGraphSeries<DataPoint> packetLossSeries = new LineGraphSeries<>();
-    private LineGraphSeries<DataPoint> delaySeries = new LineGraphSeries<>();
+    private final LineGraphSeries<DataPoint> goodPutSeries = new LineGraphSeries<>();
+    private final LineGraphSeries<DataPoint> messageLossSeries = new LineGraphSeries<>();
+    private final LineGraphSeries<DataPoint> packetLossSeries = new LineGraphSeries<>();
+    private final LineGraphSeries<DataPoint> delaySeries = new LineGraphSeries<>();
 
-    private Runnable updateStats = new Runnable() {
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable updateUI = new Runnable() {
         @Override
         public void run() {
             float packetLossPercentage = decoder.packetLossPercentage();
@@ -107,27 +92,37 @@ public class ReceiverActivity extends AppCompatActivity {
 
             String format = (
                     "Count : %d pkt / %d msg\n" +
-                    "Loss  : %d pkt / %d msg - %.2f / %.2f %%\n" +
-                    "Bytes : %d pkt / %d msg - goodput: %.2f %%\n" +
-                    "Delay : %d ms / %d msg");
+                            "Loss  : %d pkt / %d msg - %.2f / %.2f %%\n" +
+                            "Bytes : %d pkt / %d msg - goodput: %.2f %%\n" +
+                            "Size  : %d pkt / %d msg\n" +
+                            "Delay : %d ms / %d msg");
 
             statusTextView.setText(String.format(Locale.getDefault(),
                     format,
                     decoder.getPacketsReceived(), decoder.getMessagesReceived(),
                     decoder.getPacketsLost(), decoder.getMessagesLost(), packetLossPercentage, messageLossPercentage,
                     decoder.getPacketBytesReceived(), decoder.getMessageBytesReceived(), goodput,
+                    decoder.getLastPacketSize(), decoder.getLastMessageSize(),
                     delay, decoder.getMessagesBehind()));
-        }
-    };
-
-    private Runnable updateUI = new Runnable() {
-        @Override
-        public void run() {
-            runOnUiThread(updateStats);
             handler.postDelayed(this, UI_UPDATE_RATE);
         }
     };
 
+    private KeepAlive mKeepAlive;
+
+    private Button connectButton;
+    private LinearLayout configurationLinearLayout;
+    private EditText ipEditText;
+    private EditText portEditText;
+
+    private LinearLayout statusLinearLayout;
+    ToggleButton keepAliveToggleButton;
+
+    private SeekBarHelper keepAliveIntervalSeekBar;
+
+    private TextView statusTextView;
+
+    WifiManager.MulticastLock multicastLock;
 
     private void addToGraph(LineGraphSeries<DataPoint> series, float yValue) {
         series.appendData(new DataPoint(series.getHighestValueX() + 1, yValue), true, MAX_DATAPOINTS);
@@ -198,7 +193,7 @@ public class ReceiverActivity extends AppCompatActivity {
         multicastLock.acquire();
     }
 
-    private KeepAlive createKeepAlive(WifiManager wm, int keepAliveInterval) {
+    private static KeepAlive createKeepAlive(WifiManager wm, int keepAliveInterval) {
         try
         {
             String gatewayIP = "192.168.0.1";
@@ -232,12 +227,12 @@ public class ReceiverActivity extends AppCompatActivity {
         graphView.getViewport().setMaxX(MAX_DATAPOINTS);
 
         packetLossSeries.setThickness(5);
-        packetLossSeries.setColor(Color.RED);
+        packetLossSeries.setColor(Color.YELLOW);
         packetLossSeries.setTitle("packet loss");
         graphView.addSeries(packetLossSeries);
 
         messageLossSeries.setThickness(5);
-        messageLossSeries.setColor(Color.YELLOW);
+        messageLossSeries.setColor(Color.RED);
         graphView.addSeries(messageLossSeries);
 
         goodPutSeries.setThickness(5);
