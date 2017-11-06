@@ -11,7 +11,7 @@
     <string name="ip_address">IP Address</string>
     <string name="controls">Controls</string>
     <string name="speed">Speed</string>
-    <string name="buffer_size">Buffer Size</string>
+    <string name="message_size">Message Size</string>
     <string name="configuration">Configuration</string>
     <string name="bytes">Bytes</string>
     <string name="bytes_second">Bytes/Second</string>
@@ -30,4 +30,5 @@
     <string name="network">Network</string>
     <string name="protocol">Protocol</string>
     <string name="percent">%</string>
+    <string name="feedback">Feedback</string>
 </resources>

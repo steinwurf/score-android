@@ -7,8 +7,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-class Server
-{
+class Server implements ScoreEncoder.IOnDataHandler {
     private static final String TAG = Server.class.getSimpleName();
 
     interface IServerHandler
@@ -18,12 +17,18 @@ class Server
         void onStopped();
     }
 
+    private final ScoreEncoder encoder;
+
     private IServerHandler handler;
     private MulticastSocket socket;
     private int port = 0;
     private InetAddress ip = null;
 
-    void setHandler(IServerHandler handler)
+    Server(ScoreEncoder encoder) {
+        this.encoder = encoder;
+    }
+
+    void setServerHandler(IServerHandler handler)
     {
         this.handler = handler;
     }
@@ -45,29 +50,39 @@ class Server
 
                 } catch (IOException | NumberFormatException e) {
                     e.printStackTrace();
-                    Log.d(TAG, "stopped");
                     if (handler != null) {
                         handler.onError(e.toString());
-                        handler.onStopped();
                     }
+                    stop();
                 }
             }
         }).start();
+        encoder.start(this);
     }
 
-    void sendData(byte[] data) throws IOException {
+    @Override
+    public void onData(byte[] data) {
+
         if (socket != null)
         {
             DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
-            socket.send(packet);
+            try {
+                socket.send(packet);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     void stop() {
-        if (socket != null)
+        encoder.stop();
+        if (socket != null) {
             socket.close();
+        }
+
         Log.d(TAG, "stopped");
-        if (handler != null)
+        if (handler != null) {
             handler.onStopped();
+        }
     }
 }

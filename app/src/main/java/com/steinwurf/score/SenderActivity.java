@@ -15,9 +15,7 @@ import android.widget.Toast;
 
 import com.steinwurf.score.sender.Sender;
 
-import java.io.IOException;
-
-public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IOnMessageHandler {
+public class SenderActivity extends AppCompatActivity {
 
     private static final String TAG = SenderActivity.class.getSimpleName();
     private static final String SENDER_CONFIGURATION = "SENDER_CONFIGURATION";
@@ -26,19 +24,14 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
     private static final String SENDER_PORT = "SENDER_PORT";
     private static final String SENDER_IP = "SENDER_IP";
     private static final String SENDER_SPEED = "SENDER_SPEED";
-    private static final String SENDER_BUFFER_SIZE = "SENDER_BUFFER_SIZE";
+    private static final String SENDER_MESSAGE_SIZE = "SENDER_MESSAGE_SIZE";
 
     // protocol
-    private static final String SYMBOL_SIZE = "SENDER_BUFFER_SIZE";
-    private static final String GENERATION_SIZE = "SENDER_BUFFER_SIZE";
-    private static final String GENERATION_WINDOW_SIZE = "SENDER_BUFFER_SIZE";
-    private static final String DATA_REDUNDANCY = "SENDER_BUFFER_SIZE";
-    private static final String FEEDBACK_PROBABILITY = "SENDER_BUFFER_SIZE";
-
-    @Override
-    public void onPointerCaptureChanged(boolean hasCapture) {
-
-    }
+    private static final String SYMBOL_SIZE = "SYMBOL_SIZE";
+    private static final String GENERATION_SIZE = "GENERATION_SIZE";
+    private static final String GENERATION_WINDOW_SIZE = "GENERATION_WINDOW_SIZE";
+    private static final String DATA_REDUNDANCY = "DATA_REDUNDANCY";
+    private static final String FEEDBACK_PROBABILITY = "FEEDBACK_PROBABILITY";
 
     enum State
     {
@@ -57,7 +50,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
 
     // Network
     private SeekBarHelper speedSeekBar;
-    private SeekBarHelper bufferSizeSeekBar;
+    private SeekBarHelper messageSizeSeekBar;
     // Protocol
     private SeekBarHelper symbolSizeSeekBar;
     private SeekBarHelper generationSizeSeekBar;
@@ -67,9 +60,9 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
 
     WifiManager.MulticastLock multicastLock;
 
-    private Server mServer;
-    private MessageGenerator mMessageGenerator;
-    private ScoreEncoder mScoreEncoder;
+    private final Sender scoreEncoder = new Sender();
+    private final ScoreEncoder encoder = new ScoreEncoder(scoreEncoder);
+    private final Server server = new Server(encoder);
 
     private View.OnClickListener connectOnClickListener = new View.OnClickListener() {
         @Override
@@ -77,7 +70,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
             changeState(State.intermediate);
             String ipString = ipEditText.getText().toString();
             String portString = portEditText.getText().toString();
-            mServer.start(ipString, portString);
+            server.start(ipString, portString);
         }
     };
 
@@ -85,7 +78,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
         @Override
         public void onClick(View view) {
             changeState(State.intermediate);
-            mServer.stop();
+            server.stop();
         }
     };
 
@@ -103,10 +96,6 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
 
         controlLinearLayout = findViewById(R.id.controlLinearLayout);
 
-        mServer = new Server();
-        mScoreEncoder = new ScoreEncoder(this);
-        mMessageGenerator = new MessageGenerator(mScoreEncoder);
-
         setUpSeekBars();
     }
 
@@ -119,7 +108,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
         portEditText.setText(preferences.getString(SENDER_PORT, "9010"));
 
         speedSeekBar.setProgress(preferences.getInt(SENDER_SPEED, speedSeekBar.valueToProgress(1000)));
-        bufferSizeSeekBar.setProgress(preferences.getInt(SENDER_BUFFER_SIZE, bufferSizeSeekBar.valueToProgress(1000)));
+        messageSizeSeekBar.setProgress(preferences.getInt(SENDER_MESSAGE_SIZE, messageSizeSeekBar.valueToProgress(1000)));
         symbolSizeSeekBar.setProgress(preferences.getInt(SYMBOL_SIZE, symbolSizeSeekBar.valueToProgress(1000)));
         generationSizeSeekBar.setProgress(preferences.getInt(GENERATION_SIZE, generationSizeSeekBar.valueToProgress(64)));
         generationWindowSizeSeekBar.setProgress(preferences.getInt(GENERATION_WINDOW_SIZE, generationWindowSizeSeekBar.valueToProgress(20)));
@@ -127,7 +116,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
         feedbackProbabilitySeekBar.setProgress(preferences.getInt(FEEDBACK_PROBABILITY, feedbackProbabilitySeekBar.valueToProgress(50)));
 
 
-        mServer.setHandler(new Server.IServerHandler() {
+        server.setServerHandler(new Server.IServerHandler() {
 
             @Override
             public void onStarted() {
@@ -137,7 +126,6 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
                         changeState(State.connected);
                     }
                 });
-                mMessageGenerator.start();
             }
 
             @Override
@@ -152,7 +140,6 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
 
             @Override
             public void onStopped() {
-                mMessageGenerator.stop();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -172,16 +159,15 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
     @Override
     protected void onStop() {
         super.onStop();
-        mServer.setHandler(null);
-        mMessageGenerator.stop();
-        mServer.stop();
+        server.setServerHandler(null);
+        server.stop();
 
         getSharedPreferences(SENDER_CONFIGURATION, MODE_PRIVATE)
                 .edit()
                 .putString(SENDER_PORT, portEditText.getText().toString())
                 .putString(SENDER_IP, ipEditText.getText().toString())
                 .putInt(SENDER_SPEED, speedSeekBar.getProgress())
-                .putInt(SENDER_BUFFER_SIZE, bufferSizeSeekBar.getProgress())
+                .putInt(SENDER_MESSAGE_SIZE, messageSizeSeekBar.getProgress())
                 .putInt(SYMBOL_SIZE, symbolSizeSeekBar.getProgress())
                 .putInt(GENERATION_SIZE, generationSizeSeekBar.getProgress())
                 .putInt(GENERATION_WINDOW_SIZE, generationWindowSizeSeekBar.getProgress())
@@ -196,15 +182,6 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
     @Override
     protected void onDestroy() {
         super.onDestroy();
-    }
-
-    @Override
-    public void onMessage(byte[] data) {
-        try {
-            mServer.sendData(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void changeState(State newState)
@@ -240,28 +217,28 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
                 (SeekBar)findViewById(R.id.speedSeekBar),
                 (TextView)findViewById(R.id.speedTextView),
                 false);
-        speedSeekBar.setMax(MessageGenerator.MAX_SPEED);
+        speedSeekBar.setMax(ScoreEncoder.MAX_SPEED);
         speedSeekBar.setMin(1);
 
         speedSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double speed) {
-                mMessageGenerator.setGeneratorSpeed((int)speed);
+                encoder.setGeneratorSpeed((int)speed);
             }
         });
 
-        bufferSizeSeekBar = new SeekBarHelper(
-                (SeekBar)findViewById(R.id.bufferSizeSeekBar),
-                (TextView)findViewById(R.id.bufferSizeTextView),
+        messageSizeSeekBar = new SeekBarHelper(
+                (SeekBar)findViewById(R.id.messageSizeSeekBar),
+                (TextView)findViewById(R.id.messageSizeTextView),
                 false);
-        bufferSizeSeekBar.setMax(MessageGenerator.MAX_MESSAGE_SIZE);
-        bufferSizeSeekBar.setMin(MessageGenerator.MIN_MESSAGE_SIZE);
+        messageSizeSeekBar.setMax(ScoreEncoder.MAX_MESSAGE_SIZE);
+        messageSizeSeekBar.setMin(ScoreEncoder.MIN_MESSAGE_SIZE);
 
-        bufferSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+        messageSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
 
             @Override
-            public void onProgressChanged(double bufferSize) {
-                mMessageGenerator.setMessageSize((int)bufferSize);
+            public void onProgressChanged(double messageSize) {
+                encoder.setMessageSize((int)messageSize);
             }
         });
 
@@ -270,13 +247,13 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
                 (TextView)findViewById(R.id.symbolSizeTextView),
                 false);
         symbolSizeSeekBar.setMax(Sender.MAX_SYMBOL_SIZE);
-        symbolSizeSeekBar.setMin(5);
+        symbolSizeSeekBar.setMin(12);
 
         symbolSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
 
             @Override
             public void onProgressChanged(double symbolSize) {
-                mScoreEncoder.getScoreSender().setSymbolSize((int)symbolSize);
+                scoreEncoder.setSymbolSize((int)symbolSize);
             }
         });
 
@@ -290,7 +267,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
         generationSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double generationSize) {
-                mScoreEncoder.getScoreSender().setGenerationSize((int)generationSize);
+                scoreEncoder.setGenerationSize((int)generationSize);
             }
         });
 
@@ -303,7 +280,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
         generationWindowSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double generationWindowSize) {
-                mScoreEncoder.getScoreSender().setGenerationWindowSize((int)generationWindowSize);
+                scoreEncoder.setGenerationWindowSize((int)generationWindowSize);
             }
         });
 
@@ -317,7 +294,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
         dataRedundancySeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double dataRedundancy) {
-                mScoreEncoder.getScoreSender().setDataRedundancy((float)dataRedundancy / 100);
+                scoreEncoder.setDataRedundancy((float)dataRedundancy / 100);
             }
         });
 
@@ -331,7 +308,7 @@ public class SenderActivity extends AppCompatActivity implements ScoreEncoder.IO
         feedbackProbabilitySeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double feedbackProbability) {
-                mScoreEncoder.getScoreSender().setFeedbackProbability((float)feedbackProbability / 100);
+                scoreEncoder.setFeedbackProbability((float)feedbackProbability / 100);
             }
         });
     }

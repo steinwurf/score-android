@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -26,14 +25,11 @@ import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.net.InetAddress;
-import java.net.SocketAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Locale;
 
 
-public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.IOnMessageHandler {
+public class ReceiverActivity extends AppCompatActivity {
 
     private static final String TAG = ReceiverActivity.class.getSimpleName();
     private static final String RECEIVER_CONFIGURATION = "RECEIVER_CONFIGURATION";
@@ -41,13 +37,15 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
     private static final String RECEIVER_IP = "RECEIVER_IP";
     private static final String RECEIVER_KEEPALIVE_INTERVAL = "RECEIVER_KEEPALIVE_INTERVAL";
 
+    private static final int UI_UPDATE_RATE = 100;
     private static final int MAX_KEEPALIVE_INTERVAL = 500;
     private static final int MAX_DATAPOINTS = 100;
     private final Handler handler = new Handler();
 
-    private Client mClient;
+    private final ScoreDecoder decoder = new ScoreDecoder();
+    private final Client client = new Client(decoder);
+
     private KeepAlive mKeepAlive;
-    private ScoreDecoder mScoreDecoder;
 
     enum State
     {
@@ -76,7 +74,7 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
             changeState(State.intermediate);
             String ipString = ipEditText.getText().toString();
             String portString = portEditText.getText().toString();
-            mClient.start(ipString, portString);
+            client.start(ipString, portString);
         }
     };
 
@@ -84,7 +82,7 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
         @Override
         public void onClick(View view) {
             changeState(State.intermediate);
-            mClient.stop();
+            client.stop();
         }
     };
 
@@ -94,63 +92,46 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
     private LineGraphSeries<DataPoint> packetLossSeries = new LineGraphSeries<>();
     private LineGraphSeries<DataPoint> delaySeries = new LineGraphSeries<>();
 
-    private long messageCount = 0;
-    private long messageBytesReceived = 0;
-    private long messageLoss = 0;
-    private Long lastMessageId = null;
-    private Long lastMessageTimestamp = null;
-    private Long lastMessageSize = null;
-
-    private long packetCount = 0;
-    private long packetBytesReceived = 0;
-    private long packetLoss = 0;
-    private Long lastPacketId = null;
-    private Long lastPacketTimestamp = null;
-    private Long lastPacketSize = null;
-
-    private Long currentMessageId = null;
-
-    private long UI_UPDATE_RATE = 100;
     private Runnable updateStats = new Runnable() {
         @Override
         public void run() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    float packetLossPercentage = packetCount == 0 ? 0 : ((float)packetLoss / (float)packetCount) * 100;
-                    float messageLossPercentage = messageCount == 0 ? 0 : ((float)messageLoss / (float)messageCount) * 100;
-                    float goodput = ((float)messageBytesReceived / (float)packetBytesReceived) * 100;
-                    packetLossSeries.appendData(new DataPoint(packetLossSeries.getHighestValueX() + 1, packetLossPercentage), true, MAX_DATAPOINTS);
-                    messageLossSeries.appendData(new DataPoint(messageLossSeries.getHighestValueX() + 1, messageLossPercentage), true, MAX_DATAPOINTS);
-                    goodPutSeries.appendData(new DataPoint(goodPutSeries.getHighestValueX() + 1, goodput), true, MAX_DATAPOINTS);
+            float packetLossPercentage = decoder.packetLossPercentage();
+            float messageLossPercentage = decoder.messageLossPercentage();
+            float goodput = decoder.getGoodPut();
+            long delay = decoder.getDelay();
 
-                    long delay = 0;
-                    if (lastMessageTimestamp != null)
-                        delay = lastPacketTimestamp - lastMessageTimestamp;
-                    delaySeries.appendData(new DataPoint(delaySeries.getHighestValueX() + 1, delay), true, MAX_DATAPOINTS);
-                    long messagesBehind = 0;
-                    if (currentMessageId != null && lastMessageId != null)
-                    {
-                        messagesBehind = currentMessageId - lastMessageId;
-                    }
+            addToGraph(packetLossSeries, packetLossPercentage);
+            addToGraph(messageLossSeries, messageLossPercentage);
+            addToGraph(goodPutSeries, goodput);
+            addToGraph(delaySeries, delay);
 
-                    String format = (
-                            "Count : %d pkt / %d msg\n" +
-                            "Loss  : %d pkt / %d msg - %.2f / %.2f %%\n" +
-                            "Bytes : %d pkt / %d msg - goodput: %.2f %%\n" +
-                            "Delay : %d ms / %d msg");
-                    statusTextView.setText(String.format(Locale.getDefault(),
-                            format,
-                            packetCount, messageCount,
-                            packetLoss, messageLoss, packetLossPercentage, messageLossPercentage,
-                            packetBytesReceived, messageBytesReceived, goodput,
-                            delay,
-                            messagesBehind));
-                }
-            });
+            String format = (
+                    "Count : %d pkt / %d msg\n" +
+                    "Loss  : %d pkt / %d msg - %.2f / %.2f %%\n" +
+                    "Bytes : %d pkt / %d msg - goodput: %.2f %%\n" +
+                    "Delay : %d ms / %d msg");
+
+            statusTextView.setText(String.format(Locale.getDefault(),
+                    format,
+                    decoder.getPacketsReceived(), decoder.getMessagesReceived(),
+                    decoder.getPacketsLost(), decoder.getMessagesLost(), packetLossPercentage, messageLossPercentage,
+                    decoder.getPacketBytesReceived(), decoder.getMessageBytesReceived(), goodput,
+                    delay, decoder.getMessagesBehind()));
+        }
+    };
+
+    private Runnable updateUI = new Runnable() {
+        @Override
+        public void run() {
+            runOnUiThread(updateStats);
             handler.postDelayed(this, UI_UPDATE_RATE);
         }
     };
+
+
+    private void addToGraph(LineGraphSeries<DataPoint> series, float yValue) {
+        series.appendData(new DataPoint(series.getHighestValueX() + 1, yValue), true, MAX_DATAPOINTS);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,8 +145,6 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
         WifiManager wm = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wm != null;
 
-        mClient = new Client();
-        mScoreDecoder = new ScoreDecoder(this);
         mKeepAlive = createKeepAlive(wm, keepAliveInterval);
 
         connectButton = findViewById(R.id.connectButton);
@@ -192,7 +171,6 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
                 mKeepAlive.setInterval((int)value);
             }
         });
-
 
         keepAliveToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -255,6 +233,7 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
 
         packetLossSeries.setThickness(5);
         packetLossSeries.setColor(Color.RED);
+        packetLossSeries.setTitle("packet loss");
         graphView.addSeries(packetLossSeries);
 
         messageLossSeries.setThickness(5);
@@ -269,13 +248,13 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
         delaySeries.setColor(Color.BLUE);
         graphView.getSecondScale().setMaxY(5000);
         graphView.getSecondScale().setMinY(0);
-        graphView.addSeries(delaySeries);
+        graphView.getSecondScale().addSeries(delaySeries);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mClient.setClientHandler(new Client.IClientHandler() {
+        client.setClientHandler(new Client.IClientHandler() {
             @Override
             public void onStarted() {
                 runOnUiThread(new Runnable() {
@@ -307,48 +286,19 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
             }
         });
 
-        mClient.setOnDataHandler(new Client.IOnDataHandler() {
-            @Override
-            public void onData(SocketAddress senderAddress, final ByteBuffer buffer) {
-
-                buffer.order(ByteOrder.BIG_ENDIAN);
-                long id = buffer.getInt() & 0x00000000ffffffffL;
-                long timestamp = buffer.getLong();
-                currentMessageId = buffer.getInt() & 0x00000000ffffffffL;
-
-                lastPacketSize = (long)buffer.limit();
-                if (lastPacketTimestamp != null && lastPacketId != null)
-                {
-                    if (lastPacketTimestamp > timestamp)
-                    {
-                        Log.w(TAG, "OutOfOrder packet received");
-                    }
-                    else
-                    {
-                        packetLoss += calculateLoss(lastPacketId, id);
-                    }
-                }
-                lastPacketTimestamp = timestamp;
-                lastPacketId = id;
-                packetCount += 1;
-                packetBytesReceived += buffer.limit();
-                mScoreDecoder.onData(senderAddress, buffer);
-            }
-        });
-
         changeState(State.disconnected);
-        handler.post(updateStats);
+        handler.post(updateUI);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        handler.removeCallbacks(updateStats);
-        mClient.setClientHandler(null);
-        mClient.setOnDataHandler(null);
-        mClient.stop();
+        handler.removeCallbacks(updateUI);
+        client.setClientHandler(null);
+        client.stop();
         mKeepAlive.stop();
+        resetStats();
     }
 
     @Override
@@ -365,46 +315,13 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
         multicastLock.release();
     }
 
-    @Override
-    public void onMessage(ByteBuffer message) {
-
-        message.order(ByteOrder.BIG_ENDIAN);
-        long id = message.getInt() & 0x00000000ffffffffL;
-        long timestamp = message.getLong();
-
-        lastMessageSize = (long)message.limit();
-
-        if (lastMessageTimestamp != null && lastMessageId != null)
-        {
-            messageLoss += calculateLoss(lastMessageId, id);
-        }
-        lastMessageTimestamp = timestamp;
-        lastMessageId = id;
-        messageCount += 1;
-        messageBytesReceived += message.limit();
-    }
-
     private void resetStats()
     {
-        messageCount = 0;
-        messageBytesReceived = 0;
-        messageLoss = 0;
-        lastMessageId = null;
-        lastMessageTimestamp = null;
-        lastMessageSize = null;
-
-        packetCount = 0;
-        packetBytesReceived = 0;
-        packetLoss = 0;
-        lastPacketId = null;
-        lastPacketTimestamp = null;
-        lastPacketSize = null;
+        decoder.resetStats();
         packetLossSeries.resetData(new DataPoint[]{});
         messageLossSeries.resetData(new DataPoint[]{});
         goodPutSeries.resetData(new DataPoint[]{});
         delaySeries.resetData(new DataPoint[]{});
-
-        currentMessageId = null;
     }
 
     private void changeState(State newState)
@@ -433,12 +350,5 @@ public class ReceiverActivity extends AppCompatActivity implements ScoreDecoder.
                 statusLinearLayout.setVisibility(View.GONE);
                 break;
         }
-    }
-
-    private static long calculateLoss(long id, long newId)
-    {
-        if (newId <= id)
-            newId += 4294967296L;
-        return (newId - id) - 1;
     }
 }

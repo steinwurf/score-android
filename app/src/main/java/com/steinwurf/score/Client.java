@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 class Client {
 
@@ -19,26 +20,22 @@ class Client {
         void onError(String reason);
         void onStopped();
     }
-    interface IOnDataHandler
-    {
-        void onData(SocketAddress senderAddress, ByteBuffer data);
-    }
 
     private IClientHandler clientHandler;
-    private IOnDataHandler onDataHandler;
     private MulticastSocket socket;
 
-    private final byte[] receiveBuffer = new byte[2000];
-
+    private final ScoreDecoder decoder;
+    private final byte[] receiveBuffer = new byte[4096];
     private Thread connectionHandler = null;
+
+    Client(ScoreDecoder scoreDecoder)
+    {
+        decoder = scoreDecoder;
+    }
 
     void setClientHandler(IClientHandler handler)
     {
         this.clientHandler = handler;
-    }
-    void setOnDataHandler(IOnDataHandler handler)
-    {
-        this.onDataHandler = handler;
     }
 
     void start(final String ipString, final String portString) {
@@ -56,27 +53,26 @@ class Client {
                         clientHandler.onStarted();
 
                     /// Read
-                    while(true)
+                    while(!socket.isClosed())
                     {
                         DatagramPacket packet = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                         socket.receive(packet);
 
-                        if (onDataHandler != null) {
-                            ByteBuffer buffer = ByteBuffer.wrap(
-                                    packet.getData(),
-                                    packet.getOffset(),
-                                    packet.getLength());
-                            onDataHandler.onData(packet.getSocketAddress(), buffer);
-                        }
+                        ByteBuffer buffer = ByteBuffer.wrap(
+                                packet.getData(),
+                                packet.getOffset(),
+                                packet.getLength());
+                        decoder.handleData(buffer);
                     }
 
                 } catch (IOException | NumberFormatException e) {
                     e.printStackTrace();
-                    Log.d(TAG, "stopped");
-                    if (clientHandler != null) {
+                    if (clientHandler != null)
                         clientHandler.onError(e.toString());
+                } finally {
+                    Log.d(TAG, "stopped");
+                    if (clientHandler != null)
                         clientHandler.onStopped();
-                    }
                 }
             }
         });
@@ -93,8 +89,5 @@ class Client {
                 clientHandler.onError(e.toString());
             }
         }
-        Log.d(TAG, "stopped");
-        if (clientHandler != null)
-            clientHandler.onStopped();
     }
 }
