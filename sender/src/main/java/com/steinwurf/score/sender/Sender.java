@@ -7,13 +7,19 @@ package com.steinwurf.score.sender;
 @SuppressWarnings("JniMissingFunction")
 public class Sender
 {
-    public static final int MAX_SYMBOL_SIZE = 2000;
-    public static final int MAX_GENERATION_SIZE = 500;
-
     static
     {
         // Load the native sender library
         System.loadLibrary("sender_jni");
+    }
+
+    public static final int MAX_SYMBOL_SIZE = 2000;
+    public static final int MAX_GENERATION_SIZE = 500;
+
+    public static class InvalidFeedbackMessageException extends Exception {
+        public InvalidFeedbackMessageException (String message) {
+            super(message);
+        }
     }
 
     /**
@@ -87,7 +93,7 @@ public class Sender
      * that are missing on the receiver.
      * @param buffer the buffer containing the feedback message
      */
-    public void receiveMessage(byte[] buffer)
+    public void receiveMessage(byte[] buffer) throws InvalidFeedbackMessageException
     {
         receiveMessage(buffer, 0, buffer.length);
     }
@@ -100,7 +106,7 @@ public class Sender
      * @param offset the offset of the buffer
      * @param size the size of the buffer
      */
-    public native void receiveMessage(byte[] buffer, int offset, int size);
+    public native void receiveMessage(byte[] buffer, int offset, int size) throws InvalidFeedbackMessageException;
 
     /**
      * Set the symbol size.

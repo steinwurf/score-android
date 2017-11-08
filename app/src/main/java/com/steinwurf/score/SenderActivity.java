@@ -260,10 +260,13 @@ public class SenderActivity extends AppCompatActivity {
 
 
     private void setUpSeekBars() {
+
         speedSeekBar = new SeekBarHelper(
                 (SeekBar)findViewById(R.id.speedSeekBar),
                 (TextView)findViewById(R.id.speedTextView),
                 false);
+
+
         speedSeekBar.setMax(ScoreEncoder.MAX_SPEED);
         speedSeekBar.setMin(1);
 

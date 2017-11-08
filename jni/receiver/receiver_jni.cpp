@@ -71,7 +71,14 @@ void Java_com_steinwurf_score_receiver_Receiver_receiveMessage(
     auto& receiver = jutils::get_native<score::api::receiver>(env, thiz);
     std::error_code error;
     receiver.receive_message(buffer, error);
-    assert(!error);
+    if (error)
+    {
+        LOGI << "Error reading data: " << error.message();
+
+        auto exception_class = jutils::get_class(
+            env, "com/steinwurf/score/receiver/Receiver$InvalidDataMessageException");
+        env->ThrowNew(exception_class, error.message().c_str());
+    }
 }
 
 jboolean Java_com_steinwurf_score_receiver_Receiver_dataAvailable(
@@ -88,7 +95,15 @@ jbyteArray Java_com_steinwurf_score_receiver_Receiver_getData(
 
     std::error_code error;
     auto data = receiver.get_data(error);
-    assert(!error);
+    if (error)
+    {
+        LOGI << "Checksum Error: " << error.message();
+
+        auto exception_class = jutils::get_class(
+            env, "com/steinwurf/score/receiver/Receiver$InvalidChecksumException");
+        env->ThrowNew(exception_class, error.message().c_str());
+        return nullptr;
+    }
 
     jbyteArray jdata = env->NewByteArray(data.size());
     env->SetByteArrayRegion(jdata, 0, data.size(), (const jbyte*)data.data());

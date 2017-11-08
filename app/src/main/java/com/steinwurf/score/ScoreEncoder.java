@@ -32,6 +32,7 @@ class ScoreEncoder {
     private int messageSize = MIN_MESSAGE_SIZE;
     private int messageId = 0;
     private int packetId = 0;
+    private int feedbackCount = 0;
     private boolean running = false;
 
     ScoreEncoder() {
@@ -131,6 +132,19 @@ class ScoreEncoder {
 
     private synchronized byte[] encoderGetOutgoingMessage() {
         return encoder.getOutgoingMessage();
+    }
+
+    synchronized void handleFeedback(byte[] data, int offset, int length) {
+        try {
+            encoder.receiveMessage(data, offset, length);
+        } catch (Sender.InvalidFeedbackMessageException e) {
+            e.printStackTrace();
+        }
+        feedbackCount++;
+    }
+
+    public int getFeedbackCount() {
+        return feedbackCount;
     }
 
     synchronized void setSymbolSize(int symbolSize) {

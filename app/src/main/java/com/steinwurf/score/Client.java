@@ -6,9 +6,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.util.ArrayList;
 
 class Client {
 
@@ -26,7 +25,7 @@ class Client {
 
     private final ScoreDecoder decoder;
     private final byte[] receiveBuffer = new byte[4096];
-    private Thread connectionHandler = null;
+    private Thread connectionThread = null;
 
     Client(ScoreDecoder scoreDecoder)
     {
@@ -39,7 +38,7 @@ class Client {
     }
 
     void start(final String ipString, final String portString) {
-        connectionHandler = new Thread(new Runnable() {
+        connectionThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -62,9 +61,11 @@ class Client {
                                 packet.getData(),
                                 packet.getOffset(),
                                 packet.getLength());
-                        decoder.handleData(buffer);
+                        ArrayList<byte[]> feedbackMessages = decoder.handleData(buffer);
+                        for (byte[] feedbackMessage : feedbackMessages) {
+                            socket.send(new DatagramPacket(feedbackMessage, feedbackMessage.length, packet.getSocketAddress()));
+                        }
                     }
-
                 } catch (IOException | NumberFormatException e) {
                     e.printStackTrace();
                     if (clientHandler != null)
@@ -76,15 +77,15 @@ class Client {
                 }
             }
         });
-        connectionHandler.start();
+        connectionThread.start();
     }
 
     void stop()
     {
-        if (connectionHandler != null) {
+        if (connectionThread != null) {
             socket.close();
             try {
-                connectionHandler.join();
+                connectionThread.join();
             } catch (InterruptedException e) {
                 clientHandler.onError(e.toString());
             }

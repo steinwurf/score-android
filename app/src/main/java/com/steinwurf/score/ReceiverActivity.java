@@ -117,6 +117,7 @@ public class ReceiverActivity extends AppCompatActivity {
 
     private LinearLayout statusLinearLayout;
     ToggleButton keepAliveToggleButton;
+    ToggleButton feedbackToggleButton;
 
     private SeekBarHelper keepAliveIntervalSeekBar;
 
@@ -150,13 +151,15 @@ public class ReceiverActivity extends AppCompatActivity {
 
         statusLinearLayout = findViewById(R.id.statusLinearLayout);
         keepAliveToggleButton = findViewById(R.id.keepAliveToggleButton);
+        feedbackToggleButton = findViewById(R.id.feedbackToggleButton);
+
+        statusTextView = findViewById(R.id.statusTextView);
+
         keepAliveIntervalSeekBar = new SeekBarHelper(
                 (SeekBar)findViewById(R.id.keepAliveIntervalSeekBar),
                 (TextView)findViewById(R.id.keepAliveIntervalTextView),
                 false);
         keepAliveIntervalSeekBar.setMax(MAX_KEEPALIVE_INTERVAL);
-
-        statusTextView = findViewById(R.id.statusTextView);
 
         setupGraphView();
 
@@ -175,6 +178,12 @@ public class ReceiverActivity extends AppCompatActivity {
                 } else {
                     mKeepAlive.stop();
                 }
+            }
+        });
+        feedbackToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                decoder.setFeedbackEnabled(checked);
             }
         });
 

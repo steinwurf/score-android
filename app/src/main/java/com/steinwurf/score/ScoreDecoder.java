@@ -7,10 +7,13 @@ import com.steinwurf.score.receiver.Receiver;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 
 public class ScoreDecoder {
 
     private static final String TAG = ScoreDecoder.class.getSimpleName();
+
+    private boolean feedbackEnabled = false;
 
     // Packet
     private Long firstPacketId = null; // The ID of the first packet
@@ -35,7 +38,7 @@ public class ScoreDecoder {
 
     private final Receiver decoder = new Receiver();
 
-    void handleData(ByteBuffer data) {
+    ArrayList<byte[]> handleData(ByteBuffer data) {
         data.order(ByteOrder.BIG_ENDIAN);
         long packetId = data.getInt() & 0x00000000ffffffffL;
         long packetTimestamp = data.getLong();
@@ -67,13 +70,27 @@ public class ScoreDecoder {
         lastPacketId = packetId;
         packetsReceived += 1;
 
-        decoder.receiveMessage(data.array(), data.position(), data.remaining());
+        try {
+            decoder.receiveMessage(data.array(), data.position(), data.remaining());
+        } catch (Receiver.InvalidDataMessageException e) {
+            e.printStackTrace();
+        }
         while (decoder.dataAvailable())
         {
-            byte[] message = decoder.getData();
-
-            handleMessage(ByteBuffer.wrap(message));
+            try {
+                byte[] message = decoder.getData();
+                handleMessage(ByteBuffer.wrap(message));
+            } catch (Receiver.InvalidChecksumException e) {
+                e.printStackTrace();
+            }
         }
+        ArrayList<byte[]> feedbackMessages = new ArrayList<>();
+        while (feedbackEnabled && decoder.hasOutgoingMessage())
+        {
+            byte[] feedbackMessage = decoder.getOutgoingMessage();
+            feedbackMessages.add(feedbackMessage);
+        }
+        return feedbackMessages;
     }
 
     private void handleMessage(ByteBuffer message) {
@@ -177,6 +194,10 @@ public class ScoreDecoder {
 
     public long getLastMessageSize() {
         return lastMessageSize;
+    }
+
+    public void setFeedbackEnabled(boolean feedbackEnabled) {
+        this.feedbackEnabled = feedbackEnabled;
     }
 }
 

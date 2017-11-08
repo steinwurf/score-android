@@ -12,6 +12,19 @@ public class Receiver
         // Load the native receiver library
         System.loadLibrary("receiver_jni");
     }
+
+    public static class InvalidDataMessageException extends Exception {
+        public InvalidDataMessageException (String message) {
+            super(message);
+        }
+    }
+
+    public static class InvalidChecksumException extends Exception {
+        public InvalidChecksumException (String message) {
+            super(message);
+        }
+    }
+
     /**
      * A long representing a pointer to the underlying native object.
      */
@@ -56,7 +69,7 @@ public class Receiver
      * and it might schedule additional feedback messages.
      * @param buffer the buffer containing the data message
      */
-    public void receiveMessage(byte[] buffer)
+    public void receiveMessage(byte[] buffer) throws InvalidDataMessageException
     {
         receiveMessage(buffer, 0, buffer.length);
     }
@@ -69,7 +82,7 @@ public class Receiver
      * @param offset the offset into the buffer
      * @param size the size of the buffer
      */
-    public native void receiveMessage(byte[] buffer, int offset, int size);
+    public native void receiveMessage(byte[] buffer, int offset, int size)  throws InvalidDataMessageException;
 
     /**
      * Returns true if the receiver has decoded any original messages that can be
@@ -84,7 +97,7 @@ public class Receiver
      * but some messages might be lost.
      * @return the decoded original message
      */
-    public native byte[] getData();
+    public native byte[] getData() throws InvalidChecksumException;
 
     /**
      * Finalizes the object and it's underlying native part.

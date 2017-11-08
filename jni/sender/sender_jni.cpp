@@ -86,7 +86,14 @@ void Java_com_steinwurf_score_sender_Sender_receiveMessage(
     auto& sender = jutils::get_native<score::api::manual_sender>(env, thiz);
     std::error_code error;
     sender.receive_message(buffer, error);
-    assert(!error);
+    if (error)
+    {
+        LOGI << "Error reading data message: " << error.message();
+
+        auto exception_class = jutils::get_class(
+            env, "com/steinwurf/score/sender/Sender$InvalidFeedbackMessageException");
+        env->ThrowNew(exception_class, error.message().c_str());
+    }
 }
 
 void Java_com_steinwurf_score_sender_Sender_setSymbolSize(

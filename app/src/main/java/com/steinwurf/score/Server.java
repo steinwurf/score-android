@@ -17,7 +17,10 @@ class Server implements ScoreEncoder.IOnDataHandler {
         void onStopped();
     }
 
+    private final byte[] receiveBuffer = new byte[4096];
     private final ScoreEncoder encoder;
+
+    private Thread connectionThread = null;
 
     private IServerHandler handler;
     private MulticastSocket socket;
@@ -34,7 +37,7 @@ class Server implements ScoreEncoder.IOnDataHandler {
     }
 
     void start(final String ipString, final String portString) {
-        new Thread(new Runnable()
+        connectionThread = new Thread(new Runnable()
         {
             @Override
             public void run() {
@@ -49,6 +52,13 @@ class Server implements ScoreEncoder.IOnDataHandler {
                     if (handler != null)
                         handler.onStarted();
 
+                    while (!socket.isClosed())
+                    {
+                        DatagramPacket packet = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                        socket.receive(packet);
+                        encoder.handleFeedback(packet.getData(), packet.getOffset(), packet.getLength());
+                    }
+
                 } catch (IOException | NumberFormatException e) {
                     e.printStackTrace();
                     if (handler != null) {
@@ -57,7 +67,8 @@ class Server implements ScoreEncoder.IOnDataHandler {
                     stop();
                 }
             }
-        }).start();
+        });
+        connectionThread.start();
         encoder.start(this);
     }
 
@@ -79,6 +90,12 @@ class Server implements ScoreEncoder.IOnDataHandler {
         encoder.stop();
         if (socket != null) {
             socket.close();
+
+            try {
+                connectionThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         Log.d(TAG, "stopped");
