@@ -116,7 +116,7 @@ public class SenderActivity extends AppCompatActivity {
     TextView networkStatsTextView;
 
     // Network
-    private SeekBarHelper speedSeekBar;
+    private SeekBarHelper generatorSpeedSeekBar;
     private SeekBarHelper messageSizeSeekBar;
     // Protocol
     private SeekBarHelper symbolSizeSeekBar;
@@ -152,7 +152,7 @@ public class SenderActivity extends AppCompatActivity {
         ipEditText.setText(preferences.getString(SENDER_IP, "224.0.0.251"));
         portEditText.setText(preferences.getString(SENDER_PORT, "9010"));
 
-        speedSeekBar.setProgress(preferences.getInt(SENDER_SPEED, speedSeekBar.valueToProgress(1000)));
+        generatorSpeedSeekBar.setProgress(preferences.getInt(SENDER_SPEED, generatorSpeedSeekBar.valueToProgress(1000)));
         messageSizeSeekBar.setProgress(preferences.getInt(SENDER_MESSAGE_SIZE, messageSizeSeekBar.valueToProgress(1000)));
         symbolSizeSeekBar.setProgress(preferences.getInt(SYMBOL_SIZE, symbolSizeSeekBar.valueToProgress(1000)));
         generationSizeSeekBar.setProgress(preferences.getInt(GENERATION_SIZE, generationSizeSeekBar.valueToProgress(64)));
@@ -213,7 +213,7 @@ public class SenderActivity extends AppCompatActivity {
                 .edit()
                 .putString(SENDER_PORT, portEditText.getText().toString())
                 .putString(SENDER_IP, ipEditText.getText().toString())
-                .putInt(SENDER_SPEED, speedSeekBar.getProgress())
+                .putInt(SENDER_SPEED, generatorSpeedSeekBar.getProgress())
                 .putInt(SENDER_MESSAGE_SIZE, messageSizeSeekBar.getProgress())
                 .putInt(SYMBOL_SIZE, symbolSizeSeekBar.getProgress())
                 .putInt(GENERATION_SIZE, generationSizeSeekBar.getProgress())
@@ -261,18 +261,33 @@ public class SenderActivity extends AppCompatActivity {
 
     private void setUpSeekBars() {
 
-        speedSeekBar = new SeekBarHelper(
-                (SeekBar)findViewById(R.id.speedSeekBar),
+        generatorSpeedSeekBar = new SeekBarHelper((SeekBar)findViewById(R.id.speedSeekBar),
                 (TextView)findViewById(R.id.speedTextView),
-                false);
+                false) {
+            @Override
+            public void setText(double value) {
+                if ((int)value == ScoreEncoder.MAX_SPEED)
+                {
+                    textView.setText(R.string.max);
+                    return;
+                }
+                String format = "%12s/s";
+                textView.setText(String.format(format, Utils.bytesToPrettyString(value)));
+            }
+        };
 
+        generatorSpeedSeekBar.setMax(ScoreEncoder.MAX_SPEED);
+        generatorSpeedSeekBar.setMin(1);
 
-        speedSeekBar.setMax(ScoreEncoder.MAX_SPEED);
-        speedSeekBar.setMin(1);
-
-        speedSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
+        generatorSpeedSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override
             public void onProgressChanged(double speed) {
+                if ((int)speed == ScoreEncoder.MAX_SPEED)
+                {
+                    encoder.enableRateLimiter(false);
+                    return;
+                }
+                encoder.enableRateLimiter(true);
                 encoder.setGeneratorSpeed((int)speed);
             }
         });
@@ -338,7 +353,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.dataRedundancySeekBar),
                 (TextView)findViewById(R.id.dataRedundancyTextView),
                 true);
-        dataRedundancySeekBar.setMax(500);
+        dataRedundancySeekBar.setMax(200);
         dataRedundancySeekBar.setMin(0);
 
         dataRedundancySeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {

@@ -20,15 +20,8 @@ public class SeekBarHelper {
                 double percentage = i / (double)seekBar.getMax();
                 double value = (percentage * (max - min) + min);
 
+                setText(value);
                 onProgressChangedListener.onProgressChanged(value);
-                if (SeekBarHelper.this.floatingPoint)
-                {
-                    SeekBarHelper.this.textView.setText(String.format(Locale.getDefault(), "%.2f", value));
-                }
-                else
-                {
-                    SeekBarHelper.this.textView.setText(String.format(Locale.getDefault(), "%d", (int)value));
-                }
             }
         }
 
@@ -43,9 +36,9 @@ public class SeekBarHelper {
         }
     };
 
-    private final SeekBar seekBar;
-    private final TextView textView;
-    private final boolean floatingPoint;
+    protected final SeekBar seekBar;
+    protected final TextView textView;
+    protected final boolean floatingPoint;
 
     private onProgressChangedListener onProgressChangedListener;
     private int max = 100;
@@ -82,6 +75,17 @@ public class SeekBarHelper {
         else
         {
             seekBar.setProgress(progress);
+        }
+    }
+
+    public void setText(double value) {
+        if (floatingPoint)
+        {
+            textView.setText(String.format(Locale.getDefault(), "%.2f", value));
+        }
+        else
+        {
+            textView.setText(String.format(Locale.getDefault(), "%d", (int)value));
         }
     }
 

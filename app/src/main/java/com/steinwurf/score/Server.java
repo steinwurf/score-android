@@ -92,7 +92,9 @@ class Server implements ScoreEncoder.IOnDataHandler {
             socket.close();
 
             try {
-                connectionThread.join();
+                if (Thread.currentThread() != connectionThread) {
+                    connectionThread.join();
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

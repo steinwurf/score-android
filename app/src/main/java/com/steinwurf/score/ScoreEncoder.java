@@ -1,6 +1,5 @@
 package com.steinwurf.score;
 
-import android.os.Handler;
 import android.util.Log;
 
 import com.steinwurf.score.sender.Sender;
@@ -9,7 +8,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Random;
 
 class ScoreEncoder {
 
@@ -17,6 +15,11 @@ class ScoreEncoder {
     static final int MAX_MESSAGE_SIZE = 10000;
     static final int MIN_MESSAGE_SIZE = 4 + 8;
     static final int MAX_SPEED = 100000; // bytes per second
+
+    private boolean rateLimiterEnabled = true;
+    public void enableRateLimiter(boolean enable) {
+        rateLimiterEnabled = enable;
+    }
 
     interface IOnDataHandler
     {
@@ -65,7 +68,8 @@ class ScoreEncoder {
                 while(running)
                 {
                     try {
-                        Thread.sleep(timeBetweenTransfers());
+                        if (rateLimiterEnabled)
+                            Thread.sleep(timeBetweenTransfers());
 
                         ByteBuffer message = ByteBuffer.allocate(messageSize);
                         message.order(ByteOrder.BIG_ENDIAN);
