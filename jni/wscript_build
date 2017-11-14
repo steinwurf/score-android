@@ -29,38 +29,38 @@ if cpu not in cpu_copy_path_map:
 
 copy_path_platform = cpu_copy_path_map[cpu]
 
-# =========== RECEIVER =========== #
+# =========== SINK =========== #
 
 bld(features='cxx cxxshlib copy_binary',
-    source=['receiver/receiver_jni.cpp'],
-    target='receiver_jni',
+    source=['sink/sink_jni.cpp'],
+    target='sink_jni',
     install_path=None,
-    copy_path='../receiver/src/main/jniLibs/' + copy_path_platform,
+    copy_path='../sink/src/main/jniLibs/' + copy_path_platform,
     lib=['android'],
     use=['jutils', 'score_static'])
 
 bld(features='cxx cxxshlib copy_binary',
-    source=['receiver/score_receiver_version_jni.cpp'],
-    target='score_receiver_version_jni',
+    source=['sink/score_sink_version_jni.cpp'],
+    target='score_sink_version_jni',
     install_path=None,
-    copy_path='../receiver/src/main/jniLibs/' + copy_path_platform,
+    copy_path='../sink/src/main/jniLibs/' + copy_path_platform,
     lib=['android'],
     use=['STEINWURF_VERSION'])
 
-# =========== SENDER =========== #
+# =========== SOURCE =========== #
 
 bld(features='cxx cxxshlib copy_binary',
-    source=['sender/sender_jni.cpp'],
-    target='sender_jni',
+    source=['source/source_jni.cpp'],
+    target='source_jni',
     install_path=None,
-    copy_path='../sender/src/main/jniLibs/' + copy_path_platform,
+    copy_path='../source/src/main/jniLibs/' + copy_path_platform,
     lib=['android'],
     use=['jutils', 'score_static'])
 
 bld(features='cxx cxxshlib copy_binary',
-    source=['sender/score_sender_version_jni.cpp'],
-    target='score_sender_version_jni',
+    source=['source/score_source_version_jni.cpp'],
+    target='score_source_version_jni',
     install_path=None,
-    copy_path='../sender/src/main/jniLibs/' + copy_path_platform,
+    copy_path='../source/src/main/jniLibs/' + copy_path_platform,
     lib=['android'],
     use=['STEINWURF_VERSION'])

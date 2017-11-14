@@ -2,9 +2,8 @@ package com.steinwurf.score;
 
 import android.util.Log;
 
-import com.steinwurf.score.receiver.Receiver;
+import com.steinwurf.score.sink.Sink;
 
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ public class ScoreDecoder {
     private long totalMessages = 0;
     private long lastMessageSize = 0;
 
-    private final Receiver decoder = new Receiver();
+    private final Sink sink = new Sink();
 
     ArrayList<byte[]> handleData(ByteBuffer data) {
         data.order(ByteOrder.BIG_ENDIAN);
@@ -71,26 +70,26 @@ public class ScoreDecoder {
         packetsReceived += 1;
 
         try {
-            decoder.receiveMessage(data.array(), data.position(), data.remaining());
-        } catch (Receiver.InvalidDataMessageException e) {
+            sink.readDataPacket(data.array(), data.position(), data.remaining());
+        } catch (Sink.InvalidDataPacketException e) {
             e.printStackTrace();
         }
-        while (decoder.dataAvailable())
+        while (sink.hasMessage())
         {
             try {
-                byte[] message = decoder.getData();
+                byte[] message = sink.getMessage();
                 handleMessage(ByteBuffer.wrap(message));
-            } catch (Receiver.InvalidChecksumException e) {
+            } catch (Sink.InvalidChecksumException e) {
                 e.printStackTrace();
             }
         }
-        ArrayList<byte[]> feedbackMessages = new ArrayList<>();
-        while (feedbackEnabled && decoder.hasOutgoingMessage())
+        ArrayList<byte[]> snackPackets = new ArrayList<>();
+        while (feedbackEnabled && sink.hasSnackPacket())
         {
-            byte[] feedbackMessage = decoder.getOutgoingMessage();
-            feedbackMessages.add(feedbackMessage);
+            byte[] snackPacket = sink.getSnackPacket();
+            snackPackets.add(snackPacket);
         }
-        return feedbackMessages;
+        return snackPackets;
     }
 
     private void handleMessage(ByteBuffer message) {

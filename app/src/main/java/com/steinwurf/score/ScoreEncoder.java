@@ -2,7 +2,7 @@ package com.steinwurf.score;
 
 import android.util.Log;
 
-import com.steinwurf.score.sender.Sender;
+import com.steinwurf.score.source.Source;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -21,12 +21,12 @@ class ScoreEncoder {
         rateLimiterEnabled = enable;
     }
 
-    interface IOnDataHandler
+    interface IOnDataPacketHandler
     {
-        void onData(byte[] data);
+        void onDataPacket(byte[] data);
     }
 
-    private final Sender encoder;
+    private final Source source;
 
     private Thread mThread;
 
@@ -35,11 +35,11 @@ class ScoreEncoder {
     private int messageSize = MIN_MESSAGE_SIZE;
     private int messageId = 0;
     private int packetId = 0;
-    private int feedbackCount = 0;
+    private int snackCount = 0;
     private boolean running = false;
 
     ScoreEncoder() {
-        encoder = new Sender();
+        source = new Source();
     }
 
     void setMessageSize(int messageSize)
@@ -58,7 +58,7 @@ class ScoreEncoder {
             mThread.interrupt();
     }
 
-    void start(final IOnDataHandler onDataHandler)
+    void start(final IOnDataPacketHandler onDataHandler)
     {
         Log.d(TAG, "start");
         running = true;
@@ -78,8 +78,8 @@ class ScoreEncoder {
                         message.putLong(System.currentTimeMillis()); // 8
                         assert message.position() == MIN_MESSAGE_SIZE;
                         messageId++;
-                        encoderWriteData(message.array());
-                        while (encoderHasOutgoingMessage())
+                        sourceWriteMessage(message.array());
+                        while (sourceHasDataPacket())
                         {
                             ByteBuffer header = ByteBuffer.allocate(16);
                             header.order(ByteOrder.BIG_ENDIAN);
@@ -88,12 +88,12 @@ class ScoreEncoder {
                             header.putInt(messageId); // 4
                             packetId++;
 
-                            byte[] packetData = encoderGetOutgoingMessage();
+                            byte[] dataPacket = sourceGetDataPacket();
                             ByteArrayOutputStream packet = new ByteArrayOutputStream();
                             try {
                                 packet.write(header.array());
-                                packet.write(packetData);
-                                onDataHandler.onData(packet.toByteArray());
+                                packet.write(dataPacket);
+                                onDataHandler.onDataPacket(packet.toByteArray());
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -126,50 +126,50 @@ class ScoreEncoder {
         return (long)((float) messageSize / (float)speed * 1000.0);
     }
 
-    private synchronized boolean encoderHasOutgoingMessage() {
-        return encoder.hasOutgoingMessage();
+    private synchronized boolean sourceHasDataPacket() {
+        return source.hasDataPacket();
     }
 
-    private synchronized void encoderWriteData(byte[] data) {
-        encoder.writeData(data);
+    private synchronized void sourceWriteMessage(byte[] data) {
+        source.readMessage(data);
     }
 
-    private synchronized byte[] encoderGetOutgoingMessage() {
-        return encoder.getOutgoingMessage();
+    private synchronized byte[] sourceGetDataPacket() {
+        return source.getDataPacket();
     }
 
-    synchronized void handleFeedback(byte[] data, int offset, int length) {
+    synchronized void handleSnack(byte[] data, int offset, int length) {
         try {
-            encoder.receiveMessage(data, offset, length);
-        } catch (Sender.InvalidFeedbackMessageException e) {
+            source.readSnackPacket(data, offset, length);
+        } catch (Source.InvalidSnackPacketException e) {
             e.printStackTrace();
         }
-        feedbackCount++;
+        snackCount++;
     }
 
-    public int getFeedbackCount() {
-        return feedbackCount;
+    public int getSnackCount() {
+        return snackCount;
     }
 
     synchronized void setSymbolSize(int symbolSize) {
-        encoder.setSymbolSize(symbolSize);
+        source.setSymbolSize(symbolSize);
     }
 
     synchronized void setGenerationSize(int generationSize) {
-        encoder.setGenerationSize(generationSize);
+        source.setGenerationSize(generationSize);
     }
 
     synchronized void setGenerationWindowSize(int generationWindowSize) {
-        encoder.setGenerationWindowSize(generationWindowSize);
+        source.setGenerationWindowSize(generationWindowSize);
     }
 
     synchronized void setDataRedundancy(float dataRedundancy) {
-        encoder.setDataRedundancy(dataRedundancy);
+        source.setDataRedundancy(dataRedundancy);
 
     }
 
     synchronized void setFeedbackProbability(float feedbackProbability) {
-        encoder.setFeedbackProbability(feedbackProbability);
+        source.setFeedbackProbability(feedbackProbability);
     }
 
 
