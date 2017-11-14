@@ -94,9 +94,9 @@ public class ScoreDecoder {
 
     private void handleMessage(ByteBuffer message) {
         message.order(ByteOrder.BIG_ENDIAN);
+        lastMessageSize = message.remaining();
         long messageId = message.getInt() & 0x00000000ffffffffL;
         long messageTimestamp = message.getLong();
-        lastMessageSize = message.limit();
         messageBytesReceived += lastMessageSize;
 
         if (firstMessageId == null) {
