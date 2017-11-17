@@ -1,7 +1,9 @@
 score-android
 =============
 
-[![API 14+](https://img.shields.io/badge/API-14%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=14)
+.. image:: https://img.shields.io/badge/API-14%2B-brightgreen.svg?style=flat
+    :target: https://android-arsenal.com/api?level=14
+
 .. image:: http://buildbot.steinwurf.dk/svgstatus?project=score-android
     :target: http://buildbot.steinwurf.dk/stats?projects=score-android
 
@@ -10,8 +12,7 @@ score-android
 **S**\ imple **Co**\ ded **Re**\ liable protocol for reliable unicast and
 multicast communication over UDP.
 
-This repository contains Java bindings so that Score can be used in
-Android Apps.
+This repository contains Java bindings so that Score can be used natively in Android Apps.
 
 Requirements
 ------------
@@ -25,9 +26,11 @@ You need to be an authorized user to accessing this.
 
 Please contact Steinwurf at support@steinwurf.com to have us make you a user.
 
-The following change is needed for your project's ``build.gradle`` file.
+The following change is needed for your project's ``build.gradle`` file
 (Note projects have a ``build.gradle`` file for the project and one for each
 module in the project):
+
+.. code-block:: groovy
 
     maven {
         url "http://artifactory.steinwurf.com/artifactory/private-libs-release-local"
@@ -55,6 +58,8 @@ http://artifactory.steinwurf.com/artifactory/webapp/#/home
 Once you have all this adding this project as your module's dependency is as
 simple as this:
 
+.. code-block:: groovy
+
     dependencies
     {
         ...
@@ -63,7 +68,7 @@ simple as this:
         ...
     }
 
-remember to replace `[INSERT_VERSION_NUMER]` with the most recent version
+remember to replace ``[INSERT_VERSION_NUMER]`` with the most recent version
 number.
 
 Usage
@@ -73,4 +78,4 @@ Coming Soon...
 License
 -------
 
-THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF STEINWURF The copyright notice above does not evidence any actual or intended publication of such source code.
+THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF STEINWURF.
