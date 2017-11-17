@@ -24,6 +24,11 @@ allprojects {
             url "http://artifactory.steinwurf.com/artifactory/libs-release-local"
         }
     }
+    project.ext {
+        compileSdkVersion = 26
+        buildToolsVersion = '26.0.2'
+        targetSdkVersion = 26
+    }
     buildDir = 'gradle_build'
 }
 
