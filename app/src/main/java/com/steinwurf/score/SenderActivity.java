@@ -17,7 +17,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.steinwurf.score.sender.Sender;
+import com.steinwurf.score.source.Source;
 
 public class SenderActivity extends AppCompatActivity {
 
@@ -311,7 +311,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.symbolSizeSeekBar),
                 (TextView)findViewById(R.id.symbolSizeTextView),
                 false);
-        symbolSizeSeekBar.setMax(Sender.MAX_SYMBOL_SIZE);
+        symbolSizeSeekBar.setMax(Source.MAX_SYMBOL_SIZE);
         symbolSizeSeekBar.setMin(12);
 
         symbolSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
@@ -326,7 +326,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.generationSizeSeekBar),
                 (TextView)findViewById(R.id.generationSizeTextView),
                 false);
-        generationSizeSeekBar.setMax(Sender.MAX_GENERATION_SIZE);
+        generationSizeSeekBar.setMax(Source.MAX_GENERATION_SIZE);
         generationSizeSeekBar.setMin(1);
 
         generationSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
@@ -340,7 +340,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.generationWindowSizeSeekBar),
                 (TextView)findViewById(R.id.generationWindowSizeTextView),
                 false);
-        generationWindowSizeSeekBar.setMax(Sender.MAX_GENERATION_SIZE);
+        generationWindowSizeSeekBar.setMax(Source.MAX_GENERATION_SIZE);
 
         generationWindowSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override

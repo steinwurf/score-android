@@ -7,7 +7,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-class Server implements ScoreEncoder.IOnDataHandler {
+class Server implements ScoreEncoder.IOnDataPacketHandler {
     private static final String TAG = Server.class.getSimpleName();
 
     interface IServerHandler
@@ -56,7 +56,7 @@ class Server implements ScoreEncoder.IOnDataHandler {
                     {
                         DatagramPacket packet = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                         socket.receive(packet);
-                        encoder.handleFeedback(packet.getData(), packet.getOffset(), packet.getLength());
+                        encoder.handleSnack(packet.getData(), packet.getOffset(), packet.getLength());
                     }
 
                 } catch (IOException | NumberFormatException e) {
@@ -73,7 +73,7 @@ class Server implements ScoreEncoder.IOnDataHandler {
     }
 
     @Override
-    public void onData(byte[] data) {
+    public void onDataPacket(byte[] data) {
 
         if (socket != null)
         {

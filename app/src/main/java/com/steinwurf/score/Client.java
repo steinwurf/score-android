@@ -61,9 +61,9 @@ class Client {
                                 packet.getData(),
                                 packet.getOffset(),
                                 packet.getLength());
-                        ArrayList<byte[]> feedbackMessages = decoder.handleData(buffer);
-                        for (byte[] feedbackMessage : feedbackMessages) {
-                            socket.send(new DatagramPacket(feedbackMessage, feedbackMessage.length, packet.getSocketAddress()));
+                        ArrayList<byte[]> snackPackets = decoder.handleData(buffer);
+                        for (byte[] snackPacket : snackPackets) {
+                            socket.send(new DatagramPacket(snackPacket, snackPacket.length, packet.getSocketAddress()));
                         }
                     }
                 } catch (IOException | NumberFormatException e) {
