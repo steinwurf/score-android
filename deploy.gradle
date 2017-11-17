@@ -35,7 +35,7 @@ publishing {
 
                     // Skip android support libraries.
                     if (it.moduleGroup == 'com.android.support')
-                        return;
+                        return
 
                     def dependency = dependencies.appendNode('dependency')
                     // For local dependencies (compile project(...)) the version number will be

@@ -22,7 +22,7 @@ def build(bld):
 
     if bld.is_toplevel():
 
-        # Install the APK files from "{app_name}/gradle_build/outputs/apk"
+        # Install the APK files from "app/gradle_build/outputs/apk/debug"
         if bld.has_tool_option('install_path'):
 
             install_path = bld.get_tool_option('install_path')
@@ -32,7 +32,7 @@ def build(bld):
             apps = ['app']
             for app in apps:
                 start_dir = bld.path.find_dir(
-                    '{}/gradle_build/outputs/apk'.format(app))
+                    '{}/gradle_build/outputs/apk/debug'.format(app))
                 bld.install_files(os.path.join(install_path, relative_dir),
                                   start_dir.ant_glob('*.apk'),
                                   cwd=start_dir)
