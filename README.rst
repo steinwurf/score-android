@@ -52,6 +52,20 @@ You can get that on your users page on our Artifactory web interface.
 
 http://artifactory.steinwurf.com/artifactory/webapp/#/home
 
+Once you have all this adding this project as your module's dependency is as
+simple as this:
+
+    dependencies
+    {
+        ...
+        implementation 'com.steinwurf.score:sink:[INSERT_VERSION_NUMER]'
+        implementation 'com.steinwurf.score:source:[INSERT_VERSION_NUMER]'
+        ...
+    }
+
+remember to replace `[INSERT_VERSION_NUMER]` with the most recent version
+number.
+
 Usage
 -----
 Coming Soon...
