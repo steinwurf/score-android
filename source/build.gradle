@@ -37,3 +37,16 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 }
+
+task invokeWaf {
+    doLast {
+        exec {
+            workingDir getRootProject().projectDir
+            executable 'python'
+            args 'waf', 'build'
+        }
+    }
+}
+preBuild.dependsOn invokeWaf
+
+apply from: '../deploy.gradle'
