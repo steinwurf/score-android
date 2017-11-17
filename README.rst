@@ -2,4 +2,19 @@
 score-android
 *************
 
-todo
+
+Requirements
+-------------
+
+
+Setup
+-----
+
+
+Usage
+-----
+
+
+License
+-------
+
