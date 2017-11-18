@@ -47,6 +47,10 @@ def configure(properties):
     if properties.get('build_distclean'):
         command += ['distclean']
 
+    # Make sure that gradle starts from a clean state
+    if properties.get('build_distclean'):
+        run_command(['./gradlew', 'clean'])
+        
     command += ['configure', '--git_protocol=git@']
 
     if 'waf_resolve_path' in properties:
