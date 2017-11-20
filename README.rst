@@ -26,36 +26,42 @@ You need to be an authorized user to accessing this.
 
 Please contact Steinwurf at support@steinwurf.com to have us make you a user.
 
-The following change is needed for your project's ``build.gradle`` file
-(Note projects have a ``build.gradle`` file for the project and one for each
-module in the project):
+Further more the following repository needs to be added to your project's ``build.gradle`` file:
 
 .. code-block:: groovy
 
-    maven {
-        url "http://artifactory.steinwurf.com/artifactory/private-libs-release-local"
-        credentials {
-            username = "${artifactory_username}"
-            password = "${artifactory_password}"
+    allprojects {
+        repositories {
+            ...
+            maven {
+                url "http://artifactory.steinwurf.com/artifactory/private-libs-release-local"
+                credentials {
+                    username = "${artifactory_username}"
+                    password = "${artifactory_password}"
+                }
+            }
+            ...
         }
     }
 
-This change need to be in the ``allprojects`` scope and not the
-``buildscript`` one.
-
 ``"${artifactory_username}"`` and ``"${artifactory_password}"`` are strings
 defined from the variables ``artifactory_username`` and
-``artifactory_password``. These variables should not be committed to the
+``artifactory_password``. These values should not be committed to the
 repository, but rather be private to each developer.
+You can keep them private by storing them in your global your global gradle file
+(This is located in ``$HOME/.gradle/gradle.properties``):
 
-Insert the newly created username and password in your global gradle file
-(This is located in ``$HOME/.gradle/gradle.properties``).
+.. code-block:: groovy
+
+    artifactory_username=[YOUR USERNAME HERE]
+    artifactory_password=[YOUR PASSWORD HERE]
+
 For security reasons it's recommended to use an encrypted password.
 You can get that on your users page on our Artifactory web interface.
 
 http://artifactory.steinwurf.com/artifactory/webapp/#/home
 
-Once you have all this adding this project as your module's dependency is as
+Once you have all this, adding the modules of this project to your module's dependency is as
 simple as this:
 
 .. code-block:: groovy
@@ -70,6 +76,10 @@ simple as this:
 
 remember to replace ``[INSERT_VERSION_NUMER]`` with the most recent version
 number.
+
+Build
+-----
+Coming Soon...
 
 Usage
 -----
