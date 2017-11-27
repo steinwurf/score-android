@@ -78,7 +78,7 @@ class ScoreEncoder {
                         message.putLong(System.currentTimeMillis()); // 8
                         assert message.position() == MIN_MESSAGE_SIZE;
                         messageId++;
-                        sourceWriteMessage(message.array());
+                        sourceReadMessage(message.array());
                         while (sourceHasDataPacket())
                         {
                             ByteBuffer header = ByteBuffer.allocate(16);
@@ -130,7 +130,7 @@ class ScoreEncoder {
         return source.hasDataPacket();
     }
 
-    private synchronized void sourceWriteMessage(byte[] data) {
+    private synchronized void sourceReadMessage(byte[] data) {
         source.readMessage(data);
     }
 
