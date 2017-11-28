@@ -83,7 +83,8 @@ Coming Soon...
 
 Usage
 -----
-Coming Soon...
+See the reference designs located in this repository:
+https://github.com/steinwurf/score-android-reference
 
 License
 -------
