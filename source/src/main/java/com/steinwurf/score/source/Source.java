@@ -55,6 +55,7 @@ public abstract class Source {
      * state of the source might change and it might schedule data packets
      * that are missing in the sink.
      * @param buffer the buffer containing the snack message
+     * @throws InvalidSnackPacketException if Snack Packet was invalid
      */
     public void readSnackPacket(byte[] buffer) throws InvalidSnackPacketException
     {
@@ -68,6 +69,7 @@ public abstract class Source {
      * @param buffer the buffer containing the feedback message
      * @param offset the offset of the buffer
      * @param size the size of the buffer
+     * @throws InvalidSnackPacketException if Snack Packet was invalid
      */
     public abstract void readSnackPacket(byte[] buffer, int offset, int size) throws InvalidSnackPacketException;
 
