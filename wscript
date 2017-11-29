@@ -4,7 +4,7 @@
 import os
 
 APPNAME = 'score-android'
-VERSION = '2.0.0'
+VERSION = '2.0.1'
 
 
 def configure(conf):
