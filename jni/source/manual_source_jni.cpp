@@ -48,7 +48,8 @@ void Java_com_steinwurf_score_source_ManualSource_readMessage(
     env->ReleaseByteArrayElements(jmessage, jmessage_ptr, JNI_ABORT);
 }
 
-void Java_com_steinwurf_score_source_ManualSource_flush(JNIEnv* env, jobject thiz)
+void Java_com_steinwurf_score_source_ManualSource_flush(
+    JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.flush();
