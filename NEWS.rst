@@ -6,7 +6,7 @@ every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Patch: Fix JavaDoc errors.
 
 2.0.0
 -----
