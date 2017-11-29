@@ -16,7 +16,12 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.gladed.androidgitversion" version "0.4.3"
+}
+
 allprojects {
+    apply plugin: "com.gladed.androidgitversion"
     repositories {
         google()
         jcenter()
@@ -26,10 +31,13 @@ allprojects {
     }
     project.ext {
         compileSdkVersion = 26
-        buildToolsVersion = '26.0.2'
         targetSdkVersion = 26
     }
     buildDir = 'gradle_build'
+
+    androidGitVersion {
+        format '%tag%%-commit%%-dirty%'
+    }
 }
 
 task clean(type: Delete) {

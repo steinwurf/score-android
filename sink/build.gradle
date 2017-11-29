@@ -1,15 +1,15 @@
 apply plugin: 'com.android.library'
 
 project.ext {
-    libraryVersionCode = 1
+    libraryVersionCode = androidGitVersion.code()
+    libraryVersion = androidGitVersion.name()
     libraryGroupId = 'com.steinwurf.score'
-    libraryVersion = '1.0.0'
-    repositoryKey = 'private-libs-' + (libraryVersion.endsWith('SNAPSHOT') ? 'snapshots' : 'release') + '-local'
+    repositoryKey = 'private-libs-release-local'
 }
 
 android {
+
     compileSdkVersion project.ext.compileSdkVersion
-    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
         minSdkVersion 14
@@ -32,10 +32,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 }
 
 task invokeWaf {
