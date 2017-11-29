@@ -76,7 +76,7 @@ public class AutoSource extends Source
 
     /**
      * Set the maximum data redundancy that can be used
-     * @param data_redundancy floating value >= 0
+     * @param data_redundancy new value for max redundancy, must be greater than or equal to 0
      */
     public native void setMaxDataRedundancy(float data_redundancy);
 
@@ -109,6 +109,7 @@ public class AutoSource extends Source
 
     /**
      * The number of snacks the source would like to read per generation
+     * @return Desired number of snacks per generation
      */
     public native int targetSnacksPerGeneration();
 
@@ -120,6 +121,7 @@ public class AutoSource extends Source
 
     /**
      * The minimum feedback probability that can be used
+     * @return Minimum feedback probability
      */
     public native float minFeedbackProbability();
 
@@ -131,6 +133,7 @@ public class AutoSource extends Source
 
     /**
      * The maximum feedback probability that can be used
+     * @return Maximum feedback probability
      */
     public native float maxFeedbackProbability();
 
@@ -143,7 +146,8 @@ public class AutoSource extends Source
     public native void setFeedbackProbabilityGain(float gain);
 
     /**
-     * The gain used to automatically adjust the data redundancy
+     * The gain used to automatically adjust the feedback probability
+     * @return Feedback probability gain
      */
     public native float feedbackProbabilityGain();
 
@@ -155,6 +159,7 @@ public class AutoSource extends Source
 
     /**
      * The target repair delay in milliseconds
+     * @return Target repair delay in milliseconds
      */
     public native int targetRepairDelay();
 
