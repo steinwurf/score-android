@@ -48,7 +48,9 @@ public class SenderActivity extends AppCompatActivity {
         intermediate
     }
 
-    private final Source source = new AutoSource();
+    /// Use ManualSource per default.
+    //private final Source source = new AutoSource();
+    private final Source source = new ManualSource();
     private final ScoreEncoder encoder = new ScoreEncoder(source);
     private final Server server = new Server(encoder);
 
