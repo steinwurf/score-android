@@ -17,6 +17,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.steinwurf.score.source.AutoSource;
+import com.steinwurf.score.source.ManualSource;
 import com.steinwurf.score.source.Source;
 
 public class SenderActivity extends AppCompatActivity {
@@ -46,7 +48,10 @@ public class SenderActivity extends AppCompatActivity {
         intermediate
     }
 
-    private final ScoreEncoder encoder = new ScoreEncoder();
+    /// Use ManualSource per default.
+    //private final Source source = new AutoSource();
+    private final Source source = new ManualSource();
+    private final ScoreEncoder encoder = new ScoreEncoder(source);
     private final Server server = new Server(encoder);
 
 
@@ -98,6 +103,15 @@ public class SenderActivity extends AppCompatActivity {
             }
             previousReceived = totalBytesReceived;
             previousSent = totalBytesSent;
+
+            if (source instanceof AutoSource)
+            {
+                symbolSizeSeekBar.setProgress(symbolSizeSeekBar.valueToProgress(source.symbolSize()));
+                generationSizeSeekBar.setProgress(generationSizeSeekBar.valueToProgress(source.generationSize()));
+                generationWindowSizeSeekBar.setProgress(generationWindowSizeSeekBar.valueToProgress(source.generationWindowSize()));
+                dataRedundancySeekBar.setProgress(dataRedundancySeekBar.valueToProgress(source.dataRedundancy()* 100));
+                feedbackProbabilitySeekBar.setProgress(feedbackProbabilitySeekBar.valueToProgress(source.feedbackProbability() * 100));
+            }
 
             handler.postDelayed(this, UI_UPDATE_RATE);
         }
@@ -159,7 +173,6 @@ public class SenderActivity extends AppCompatActivity {
         generationWindowSizeSeekBar.setProgress(preferences.getInt(GENERATION_WINDOW_SIZE, generationWindowSizeSeekBar.valueToProgress(20)));
         dataRedundancySeekBar.setProgress(preferences.getInt(DATA_REDUNDANCY, dataRedundancySeekBar.valueToProgress(10)));
         feedbackProbabilitySeekBar.setProgress(preferences.getInt(FEEDBACK_PROBABILITY, feedbackProbabilitySeekBar.valueToProgress(50)));
-
 
         server.setServerHandler(new Server.IServerHandler() {
 
@@ -311,7 +324,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.symbolSizeSeekBar),
                 (TextView)findViewById(R.id.symbolSizeTextView),
                 false);
-        symbolSizeSeekBar.setMax(Source.MAX_SYMBOL_SIZE);
+        symbolSizeSeekBar.setMax(ManualSource.MAX_SYMBOL_SIZE);
         symbolSizeSeekBar.setMin(12);
 
         symbolSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
@@ -326,7 +339,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.generationSizeSeekBar),
                 (TextView)findViewById(R.id.generationSizeTextView),
                 false);
-        generationSizeSeekBar.setMax(Source.MAX_GENERATION_SIZE);
+        generationSizeSeekBar.setMax(ManualSource.MAX_GENERATION_SIZE);
         generationSizeSeekBar.setMin(1);
 
         generationSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
@@ -340,7 +353,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.generationWindowSizeSeekBar),
                 (TextView)findViewById(R.id.generationWindowSizeTextView),
                 false);
-        generationWindowSizeSeekBar.setMax(Source.MAX_GENERATION_SIZE);
+        generationWindowSizeSeekBar.setMax(ManualSource.MAX_GENERATION_SIZE);
 
         generationWindowSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override

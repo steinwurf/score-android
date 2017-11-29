@@ -47,11 +47,19 @@ bld(features='cxx cxxshlib copy_binary',
     lib=['android'],
     use=['STEINWURF_VERSION'])
 
-# =========== SOURCE =========== #
+# =========== SOURCES =========== #
 
 bld(features='cxx cxxshlib copy_binary',
-    source=['source/source_jni.cpp'],
-    target='source_jni',
+    source=['source/manual_source_jni.cpp'],
+    target='manual_source_jni',
+    install_path=None,
+    copy_path='../source/src/main/jniLibs/' + copy_path_platform,
+    lib=['android'],
+    use=['jutils', 'score_static'])
+
+bld(features='cxx cxxshlib copy_binary',
+    source=['source/auto_source_jni.cpp'],
+    target='auto_source_jni',
     install_path=None,
     copy_path='../source/src/main/jniLibs/' + copy_path_platform,
     lib=['android'],

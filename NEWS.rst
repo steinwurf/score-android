@@ -6,7 +6,11 @@ every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Major: Renamed Source to ``ManualSource``.
+* Major: Added new abstract base class for sources called ``Source``.
+* Minor: Added ``AutoSource``.
+* Major: Use androidGitVersion for setting the version of the apps and
+  libraries automatically.
 
 1.0.0
 -----
