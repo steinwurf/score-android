@@ -6,6 +6,10 @@ every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+2.0.0
+-----
 * Major: Renamed Source to ``ManualSource``.
 * Major: Added new abstract base class for sources called ``Source``.
 * Minor: Added ``AutoSource``.
