@@ -31,12 +31,12 @@ jint JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
 extern "C" {
 #endif
 
-jlong Java_com_steinwurf_score_source_Source_init(
+jlong Java_com_steinwurf_score_source_ManualSource_init(
     JNIEnv* /*env*/, jclass /*thiz*/)
 {
     return reinterpret_cast<jlong>(new score::api::manual_source());
 }
-void Java_com_steinwurf_score_source_Source_readMessage(
+void Java_com_steinwurf_score_source_ManualSource_readMessage(
     JNIEnv* env, jobject thiz, jbyteArray jmessage, jint offset, jint size)
 {
     auto jmessage_ptr = env->GetByteArrayElements(jmessage, 0);
@@ -48,27 +48,27 @@ void Java_com_steinwurf_score_source_Source_readMessage(
     env->ReleaseByteArrayElements(jmessage, jmessage_ptr, JNI_ABORT);
 }
 
-void Java_com_steinwurf_score_source_Source_flush(JNIEnv* env, jobject thiz)
+void Java_com_steinwurf_score_source_ManualSource_flush(JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.flush();
 }
 
-jboolean Java_com_steinwurf_score_source_Source_hasDataPacket(
+jboolean Java_com_steinwurf_score_source_ManualSource_hasDataPacket(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     return source.has_data_packet();
 }
 
-jint Java_com_steinwurf_score_source_Source_dataPackets(
+jint Java_com_steinwurf_score_source_ManualSource_dataPackets(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     return source.data_packets();
 }
 
-jbyteArray Java_com_steinwurf_score_source_Source_getDataPacket(
+jbyteArray Java_com_steinwurf_score_source_ManualSource_getDataPacket(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
@@ -80,7 +80,7 @@ jbyteArray Java_com_steinwurf_score_source_Source_getDataPacket(
     return jdata_packet;
 }
 
-void Java_com_steinwurf_score_source_Source_readSnackPacket(
+void Java_com_steinwurf_score_source_ManualSource_readSnackPacket(
     JNIEnv* env, jobject thiz, jbyteArray jsnack_packet, jint offset, jint size)
 {
     auto jsnack_packet_ptr = env->GetByteArrayElements(jsnack_packet, 0);
@@ -97,83 +97,82 @@ void Java_com_steinwurf_score_source_Source_readSnackPacket(
         LOGI << "Error reading snack packet: " << error.message();
 
         auto exception_class = jutils::get_class(
-            env, "com/steinwurf/score/source/Source$InvalidSnackPacketException");
+            env, "com/steinwurf/score/source/InvalidSnackPacketException");
         env->ThrowNew(exception_class, error.message().c_str());
     }
 }
 
-void Java_com_steinwurf_score_source_Source_setSymbolSize(
+void Java_com_steinwurf_score_source_ManualSource_setSymbolSize(
     JNIEnv* env, jobject thiz, jint size)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_symbol_size(size);
 }
 
-void Java_com_steinwurf_score_source_Source_setGenerationSize(
+void Java_com_steinwurf_score_source_ManualSource_setGenerationSize(
     JNIEnv* env, jobject thiz, jint symbols)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_generation_size(symbols);
 }
 
-void Java_com_steinwurf_score_source_Source_setGenerationWindowSize(
+void Java_com_steinwurf_score_source_ManualSource_setGenerationWindowSize(
     JNIEnv* env, jobject thiz, jint generations)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_generation_window_size(generations);
 }
 
-void Java_com_steinwurf_score_source_Source_setDataRedundancy(
+void Java_com_steinwurf_score_source_ManualSource_setDataRedundancy(
     JNIEnv* env, jobject thiz, jfloat redundancy)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_data_redundancy(redundancy);
 }
 
-void Java_com_steinwurf_score_source_Source_setFeedbackProbability(
+void Java_com_steinwurf_score_source_ManualSource_setFeedbackProbability(
     JNIEnv* env, jobject thiz, jfloat probability)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_feedback_probability(probability);
 }
 
-jint Java_com_steinwurf_score_source_Source_generationWindowSize(
+jint Java_com_steinwurf_score_source_ManualSource_generationWindowSize(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     return source.generation_window_size();
 }
 
-jfloat Java_com_steinwurf_score_source_Source_dataRedundancy(
+jfloat Java_com_steinwurf_score_source_ManualSource_dataRedundancy(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     return source.data_redundancy();
 }
 
-jfloat Java_com_steinwurf_score_source_Source_feedbackProbability(
+jfloat Java_com_steinwurf_score_source_ManualSource_feedbackProbability(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     return source.feedback_probability();
 }
 
-jint Java_com_steinwurf_score_source_Source_symbolSize(
+jint Java_com_steinwurf_score_source_ManualSource_symbolSize(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     return source.symbol_size();
 }
 
-jint Java_com_steinwurf_score_source_Source_generationSize(
+jint Java_com_steinwurf_score_source_ManualSource_generationSize(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     return source.generation_size();
 }
 
-
-void Java_com_steinwurf_score_source_Source_finalize(
+void Java_com_steinwurf_score_source_ManualSource_finalize(
     JNIEnv* /*env*/, jobject /*thiz*/, jlong pointer)
 {
     auto source = reinterpret_cast<score::api::manual_source*>(pointer);

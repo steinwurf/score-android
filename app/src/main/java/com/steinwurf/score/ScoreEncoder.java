@@ -2,6 +2,9 @@ package com.steinwurf.score;
 
 import android.util.Log;
 
+import com.steinwurf.score.source.AutoSource;
+import com.steinwurf.score.source.InvalidSnackPacketException;
+import com.steinwurf.score.source.ManualSource;
 import com.steinwurf.score.source.Source;
 
 import java.io.ByteArrayOutputStream;
@@ -38,8 +41,8 @@ class ScoreEncoder {
     private int snackCount = 0;
     private boolean running = false;
 
-    ScoreEncoder() {
-        source = new Source();
+    ScoreEncoder(Source source) {
+        this.source = source;
     }
 
     void setMessageSize(int messageSize)
@@ -141,7 +144,7 @@ class ScoreEncoder {
     synchronized void handleSnack(byte[] data, int offset, int length) {
         try {
             source.readSnackPacket(data, offset, length);
-        } catch (Source.InvalidSnackPacketException e) {
+        } catch (InvalidSnackPacketException e) {
             e.printStackTrace();
         }
         snackCount++;
@@ -152,25 +155,32 @@ class ScoreEncoder {
     }
 
     synchronized void setSymbolSize(int symbolSize) {
-        source.setSymbolSize(symbolSize);
+        if (source instanceof ManualSource)
+            ((ManualSource)source).setSymbolSize(symbolSize);
+        if (source instanceof AutoSource)
+            ((AutoSource)source).setSymbolSize(symbolSize);
     }
 
     synchronized void setGenerationSize(int generationSize) {
-        source.setGenerationSize(generationSize);
+        if (source instanceof ManualSource)
+            ((ManualSource)source).setGenerationSize(generationSize);
+        if (source instanceof AutoSource)
+            ((AutoSource)source).setGenerationSize(generationSize);
     }
 
     synchronized void setGenerationWindowSize(int generationWindowSize) {
-        source.setGenerationWindowSize(generationWindowSize);
+        if (source instanceof ManualSource)
+            ((ManualSource)source).setGenerationWindowSize(generationWindowSize);
     }
 
     synchronized void setDataRedundancy(float dataRedundancy) {
-        source.setDataRedundancy(dataRedundancy);
+        if (source instanceof ManualSource)
+            ((ManualSource)source).setDataRedundancy(dataRedundancy);
 
     }
 
     synchronized void setFeedbackProbability(float feedbackProbability) {
-        source.setFeedbackProbability(feedbackProbability);
+        if (source instanceof ManualSource)
+            ((ManualSource)source).setFeedbackProbability(feedbackProbability);
     }
-
-
 }

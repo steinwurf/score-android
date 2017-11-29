@@ -14,10 +14,10 @@ public class SeekBarHelper {
 
     private final OnSeekBarChangeListener onSeekBarChangeListener = new OnSeekBarChangeListener() {
         @Override
-        public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             if (onProgressChangedListener != null)
             {
-                double percentage = i / (double)seekBar.getMax();
+                double percentage = progress / (double)seekBar.getMax();
                 double value = (percentage * (max - min) + min);
 
                 setText(value);
