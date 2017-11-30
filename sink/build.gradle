@@ -8,17 +8,12 @@ project.ext {
 }
 
 android {
-
     compileSdkVersion project.ext.compileSdkVersion
-
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion project.ext.targetSdkVersion
         versionCode libraryVersionCode
         versionName libraryVersion
-
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
     }
 
     buildTypes {
@@ -27,7 +22,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
 }
 
 dependencies {
