@@ -90,8 +90,8 @@ def run_tests(properties):
     device_id = properties['tool_options']['device_id']
 
     def run_gradle_command(command):
-        "ANDROID_SERIAL={} ./gradlew {}".format(device_id, command)
-        run_command(device_id, shell=True)
+        cmd = "ANDROID_SERIAL={} ./gradlew {}".format(device_id, command)
+        run_command(cmd, shell=True)
 
     # Remove any previously installed versions of the app from the device
     run_gradle_command('uninstallAll')
