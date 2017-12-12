@@ -22,7 +22,24 @@ public class ManualSource extends Source
         System.loadLibrary("manual_source_jni");
     }
 
-    public static final int MAX_GENERATION_WINDOW_SIZE = 32767;
+    private static native int getMaxSymbolSize();
+    private static native int getMaxGenerationSize();
+    private static native int getMaxGenerationWindowSize();
+
+    /**
+     * The maximum symbol size
+     */
+    public static final int MAX_SYMBOL_SIZE = getMaxSymbolSize();
+
+    /**
+     * The maximum generation size
+     */
+    public static final int MAX_GENERATION_SIZE = getMaxGenerationSize();
+
+    /**
+     * The maximum generation window size
+     */
+    public static final int MAX_GENERATION_WINDOW_SIZE = getMaxGenerationWindowSize();
 
     /**
      * A long representing a pointer to the underlying native object.

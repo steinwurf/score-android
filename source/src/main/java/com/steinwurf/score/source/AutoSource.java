@@ -22,6 +22,19 @@ public class AutoSource extends Source
         System.loadLibrary("auto_source_jni");
     }
 
+    private static native int getMaxSymbolSize();
+    private static native int getMaxGenerationSize();
+
+    /**
+     * The maximum symbol size
+     */
+    public static final int MAX_SYMBOL_SIZE = getMaxSymbolSize();
+
+    /**
+     * The maximum generation size
+     */
+    public static final int MAX_GENERATION_SIZE = getMaxGenerationSize();
+
     /**
      * A long representing a pointer to the underlying native object.
      */
@@ -212,8 +225,8 @@ public class AutoSource extends Source
      */
     public void setSymbolSize(int size)
     {
-        //if (size > MAX_SYMBOL_SIZE)
-        //    throw new IllegalArgumentException(size + " > " + MAX_SYMBOL_SIZE);
+        if (size > MAX_SYMBOL_SIZE)
+            throw new IllegalArgumentException(size + " > " + MAX_SYMBOL_SIZE);
         nativeSetSymbolSize(size);
     }
     private native void nativeSetSymbolSize(int size);

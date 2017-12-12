@@ -15,6 +15,21 @@ public class ManualSourceTest {
         source = new ManualSource();
     }
 
+    @Test
+    public void testMaxSymbolSize() throws Exception {
+        Assert.assertEquals(2000, ManualSource.MAX_SYMBOL_SIZE);
+    }
+
+    @Test
+    public void testMaxGenerationSize() throws Exception {
+        Assert.assertEquals(500, ManualSource.MAX_GENERATION_SIZE);
+    }
+
+    @Test
+    public void testMaxGenerationWindowSize() throws Exception {
+        Assert.assertEquals(32767, ManualSource.MAX_GENERATION_WINDOW_SIZE);
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testGetDataPacket() throws Exception {
         Assert.assertFalse(source.hasDataPacket());

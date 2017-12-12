@@ -31,11 +31,24 @@ jint JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
 extern "C" {
 #endif
 
+jint Java_com_steinwurf_score_source_AutoSource_getMaxSymbolSize(
+    JNIEnv* /*env*/, jclass /*thiz*/)
+{
+    return score::api::auto_source::max_symbol_size;
+}
+
+jint Java_com_steinwurf_score_source_AutoSource_getMaxGenerationSize(
+    JNIEnv* /*env*/, jclass /*thiz*/)
+{
+    return score::api::auto_source::max_generation_size;
+}
+
 jlong Java_com_steinwurf_score_source_AutoSource_init(
     JNIEnv* /*env*/, jclass /*thiz*/)
 {
     return reinterpret_cast<jlong>(new score::api::auto_source());
 }
+
 void Java_com_steinwurf_score_source_AutoSource_readMessage(
     JNIEnv* env, jobject thiz, jbyteArray jmessage, jint offset, jint size)
 {
@@ -68,7 +81,7 @@ jint Java_com_steinwurf_score_source_AutoSource_dataPackets(
     return source.data_packets();
 }
 
-jbyteArray Java_com_steinwurf_score_source_AutoSource_getDataPacket(
+jbyteArray Java_com_steinwurf_score_source_AutoSource_nativeGetDataPacket(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);

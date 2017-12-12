@@ -6,7 +6,8 @@ every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Major: Moved ``MAX_SYMBOL_SIZE`` and ``MAX_GENERATION_SIZE`` from ``Source``
+  into ``AutoSource`` and ``ManualSource``.
 
 2.0.1
 -----

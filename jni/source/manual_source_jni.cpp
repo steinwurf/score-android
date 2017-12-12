@@ -31,11 +31,30 @@ jint JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
 extern "C" {
 #endif
 
+jint Java_com_steinwurf_score_source_ManualSource_getMaxSymbolSize(
+    JNIEnv* /*env*/, jclass /*thiz*/)
+{
+    return score::api::manual_source::max_symbol_size;
+}
+
+jint Java_com_steinwurf_score_source_ManualSource_getMaxGenerationSize(
+    JNIEnv* /*env*/, jclass /*thiz*/)
+{
+    return score::api::manual_source::max_generation_size;
+}
+
+jint Java_com_steinwurf_score_source_ManualSource_getMaxGenerationWindowSize(
+    JNIEnv* /*env*/, jclass /*thiz*/)
+{
+    return score::api::manual_source::max_generation_window_size;
+}
+
 jlong Java_com_steinwurf_score_source_ManualSource_init(
     JNIEnv* /*env*/, jclass /*thiz*/)
 {
     return reinterpret_cast<jlong>(new score::api::manual_source());
 }
+
 void Java_com_steinwurf_score_source_ManualSource_readMessage(
     JNIEnv* env, jobject thiz, jbyteArray jmessage, jint offset, jint size)
 {
