@@ -103,35 +103,35 @@ void Java_com_steinwurf_score_source_ManualSource_readSnackPacket(
     }
 }
 
-void Java_com_steinwurf_score_source_ManualSource_setSymbolSize(
+void Java_com_steinwurf_score_source_ManualSource_nativeSetSymbolSize(
     JNIEnv* env, jobject thiz, jint size)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_symbol_size(size);
 }
 
-void Java_com_steinwurf_score_source_ManualSource_setGenerationSize(
+void Java_com_steinwurf_score_source_ManualSource_nativeSetGenerationSize(
     JNIEnv* env, jobject thiz, jint symbols)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_generation_size(symbols);
 }
 
-void Java_com_steinwurf_score_source_ManualSource_setGenerationWindowSize(
+void Java_com_steinwurf_score_source_ManualSource_nativeSetGenerationWindowSize(
     JNIEnv* env, jobject thiz, jint generations)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_generation_window_size(generations);
 }
 
-void Java_com_steinwurf_score_source_ManualSource_setDataRedundancy(
+void Java_com_steinwurf_score_source_ManualSource_nativeSetDataRedundancy(
     JNIEnv* env, jobject thiz, jfloat redundancy)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);
     source.set_data_redundancy(redundancy);
 }
 
-void Java_com_steinwurf_score_source_ManualSource_setFeedbackProbability(
+void Java_com_steinwurf_score_source_ManualSource_nativeSetFeedbackProbability(
     JNIEnv* env, jobject thiz, jfloat probability)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);

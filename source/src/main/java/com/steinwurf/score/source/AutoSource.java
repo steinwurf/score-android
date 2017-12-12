@@ -78,7 +78,13 @@ public class AutoSource extends Source
      * Set the maximum data redundancy that can be used
      * @param data_redundancy new value for max redundancy, must be greater than or equal to 0
      */
-    public native void setMaxDataRedundancy(float data_redundancy);
+    public void setMaxDataRedundancy(float data_redundancy)
+    {
+        if (data_redundancy < 0)
+            throw new IllegalArgumentException(data_redundancy + " < 0");
+        nativeSetMaxDataRedundancy(data_redundancy);
+    }
+    private native void nativeSetMaxDataRedundancy(float data_redundancy);
 
     /**
      * The maximum data redundancy that can be used
@@ -92,7 +98,13 @@ public class AutoSource extends Source
      * steady redundancy level
      * @param gain float in the range ]0,1].
      */
-    public native void setDataRedundancyEstimationGain(float gain);
+    public void setDataRedundancyEstimationGain(float gain)
+    {
+        if (gain < 0)
+            throw new IllegalArgumentException(gain + " < 0");
+        nativeSetDataRedundancyEstimationGain(gain);
+    }
+    private native void nativeSetDataRedundancyEstimationGain(float gain);
 
     /**
      * The gain used to automatically adjust the data redundancy
@@ -105,7 +117,13 @@ public class AutoSource extends Source
      * per generation
      * @param snacks the number of target snacks per generation
      */
-    public native void setTargetSnacksPerGeneration(int snacks);
+    public void setTargetSnacksPerGeneration(int snacks)
+    {
+        if (snacks < 0)
+            throw new IllegalArgumentException(snacks + " < 0");
+        nativeSetTargetSnacksPerGeneration(snacks);
+    }
+    private native void nativeSetTargetSnacksPerGeneration(int snacks);
 
     /**
      * The number of snacks the source would like to read per generation
@@ -117,7 +135,13 @@ public class AutoSource extends Source
      * Set the minimum feedback probability that can be used
      * @param probability the min feedback probability
      */
-    public native void setMinFeedbackProbability(float probability);
+    public void setMinFeedbackProbability(float probability)
+    {
+        if (probability < 0)
+            throw new IllegalArgumentException(probability + " < 0");
+        nativeSetMinFeedbackProbability(probability);
+    }
+    private native void nativeSetMinFeedbackProbability(float probability);
 
     /**
      * The minimum feedback probability that can be used
@@ -129,7 +153,13 @@ public class AutoSource extends Source
      * Set the maximum feedback probability that can be used
      * @param probability the max feedback probability
      */
-    public native void setMaxFeedbackProbability(float probability);
+    public void setMaxFeedbackProbability(float probability)
+    {
+        if (probability < 0)
+            throw new IllegalArgumentException(probability + " < 0");
+        nativeSetMaxFeedbackProbability(probability);
+    }
+    private native void nativeSetMaxFeedbackProbability(float probability);
 
     /**
      * The maximum feedback probability that can be used
@@ -143,7 +173,13 @@ public class AutoSource extends Source
      * steady redundancy level
      * @param gain float in the range ]0,1], default 0.2
      */
-    public native void setFeedbackProbabilityGain(float gain);
+    public void setFeedbackProbabilityGain(float gain)
+    {
+        if (gain < 0)
+            throw new IllegalArgumentException(gain + " < 0");
+        nativeSetFeedbackProbabilityGain(gain);
+    }
+    private native void nativeSetFeedbackProbabilityGain(float gain);
 
     /**
      * The gain used to automatically adjust the feedback probability
@@ -155,7 +191,13 @@ public class AutoSource extends Source
      * Set the target repair delay in milliseconds
      * @param milliseconds_delay the target repair delay in milliseconds
      */
-    public native void setTargetRepairDelay(int milliseconds_delay);
+    public void setTargetRepairDelay(int milliseconds_delay)
+    {
+        if (milliseconds_delay < 0)
+            throw new IllegalArgumentException(milliseconds_delay + " < 0");
+        nativeSetTargetRepairDelay(milliseconds_delay);
+    }
+    private native void nativeSetTargetRepairDelay(int milliseconds_delay);
 
     /**
      * The target repair delay in milliseconds
@@ -168,14 +210,26 @@ public class AutoSource extends Source
      * Has no effect on current active encoders.
      * @param size the symbols size in bytes
      */
-    public native void setSymbolSize(int size);
+    public void setSymbolSize(int size)
+    {
+        if (size > MAX_SYMBOL_SIZE)
+            throw new IllegalArgumentException(size + " > " + MAX_SYMBOL_SIZE);
+        nativeSetSymbolSize(size);
+    }
+    private native void nativeSetSymbolSize(int size);
 
     /**
      * Set the generation size.
      * Has no effect on current active encoders
      * @param symbols the number of symbols in the next created generation
      */
-    public native void setGenerationSize(int symbols);
+    public void setGenerationSize(int symbols)
+    {
+        if (symbols > MAX_GENERATION_SIZE)
+            throw new IllegalArgumentException(symbols + " > " + MAX_GENERATION_SIZE);
+        nativeSetGenerationSize(symbols);
+    }
+    private native void nativeSetGenerationSize(int symbols);
 
     /**
      * Finalizes the object and it's underlying native part.
