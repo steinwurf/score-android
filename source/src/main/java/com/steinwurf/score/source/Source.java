@@ -2,9 +2,6 @@ package com.steinwurf.score.source;
 
 public abstract class Source {
 
-    public static final int MAX_SYMBOL_SIZE = 2000;
-    public static final int MAX_GENERATION_SIZE = 500;
-
     /**
      * Reads a complete message to the bitstream.
      * @param buffer The buffer containing message to read.

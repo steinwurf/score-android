@@ -14,6 +14,16 @@ public class AutoSourceTest {
         source = new AutoSource();
     }
 
+    @Test
+    public void testMaxSymbolSize() throws Exception {
+        Assert.assertEquals(AutoSource.MAX_SYMBOL_SIZE, 2000);
+    }
+
+    @Test
+    public void testMaxGenerationSize() throws Exception {
+        Assert.assertEquals(AutoSource.MAX_GENERATION_SIZE, 500);
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testGetDataPacket() throws Exception {
         Assert.assertFalse(source.hasDataPacket());
@@ -59,8 +69,8 @@ public class AutoSourceTest {
 
     @Test
     public void testSetSymbolSize() throws Exception {
-        source.setSymbolSize(2051);
-        Assert.assertEquals(2051, source.symbolSize());
+        source.setSymbolSize(2000);
+        Assert.assertEquals(2000, source.symbolSize());
     }
 
     @Test
