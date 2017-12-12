@@ -22,6 +22,8 @@ public class ManualSource extends Source
         System.loadLibrary("manual_source_jni");
     }
 
+    public static final int MAX_GENERATION_WINDOW_SIZE = 32767;
+
     /**
      * A long representing a pointer to the underlying native object.
      */
@@ -54,7 +56,7 @@ public class ManualSource extends Source
     public native int dataPackets();
 
     @Override
-    public native byte[] getDataPacket();
+    public native byte[] nativeGetDataPacket();
 
     @Override
     public native void readSnackPacket(byte[] buffer, int offset, int size) throws InvalidSnackPacketException;
@@ -79,20 +81,38 @@ public class ManualSource extends Source
      * Has no effect on current active encoders.
      * @param size the symbols size in bytes
      */
-    public native void setSymbolSize(int size);
+    public void setSymbolSize(int size)
+    {
+        if (size > MAX_SYMBOL_SIZE)
+            throw new IllegalArgumentException(size + " > " + MAX_SYMBOL_SIZE);
+        nativeSetSymbolSize(size);
+    }
+    private native void nativeSetSymbolSize(int size);
 
     /**
      * Set the generation size.
      * Has no effect on current active encoders
      * @param symbols the number of symbols in the next created generation
      */
-    public native void setGenerationSize(int symbols);
+    public void setGenerationSize(int symbols)
+    {
+        if (symbols > MAX_GENERATION_SIZE)
+            throw new IllegalArgumentException(symbols + " > " + MAX_GENERATION_SIZE);
+        nativeSetGenerationSize(symbols);
+    }
+    private native void nativeSetGenerationSize(int symbols);
 
     /**
      * Set the amount of supported generations 'back in time'.
      * @param generations the number of old generations
      */
-    public native void setGenerationWindowSize(int generations);
+    public void setGenerationWindowSize(int generations)
+    {
+        if (generations > MAX_GENERATION_WINDOW_SIZE)
+            throw new IllegalArgumentException(generations + " > " + MAX_GENERATION_WINDOW_SIZE);
+        nativeSetGenerationWindowSize(generations);
+    }
+    private native void nativeSetGenerationWindowSize(int generations);
 
     /**
      * Set the auto-redundancy factor.
@@ -104,13 +124,25 @@ public class ManualSource extends Source
      * 0.99 = 99% redundancy added to original data
      * Recommended value is between 0.0 and 0.5
      */
-    public native void setDataRedundancy(float redundancy);
+    public void setDataRedundancy(float redundancy)
+    {
+        if (redundancy < 0)
+            throw new IllegalArgumentException(redundancy + " < 0");
+        nativeSetDataRedundancy(redundancy);
+    }
+    private native void nativeSetDataRedundancy(float redundancy);
 
     /**
      * Set the feedback probability
      * @param probability the feedback probability between 0.0 and 1.0
      */
-    public native void setFeedbackProbability(float probability);
+    public void setFeedbackProbability(float probability)
+    {
+        if (probability < 0)
+            throw new IllegalArgumentException(probability + " < 0");
+        nativeSetFeedbackProbability(probability);
+    }
+    private native void nativeSetFeedbackProbability(float probability);
 
     /**
      * Finalizes the object and it's underlying native part.

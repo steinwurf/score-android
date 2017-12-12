@@ -137,21 +137,21 @@ jint Java_com_steinwurf_score_source_AutoSource_generationSize(
     return source.generation_size();
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setSymbolSize(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetSymbolSize(
     JNIEnv* env, jobject thiz, jint size)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);
     source.set_symbol_size(size);
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setGenerationSize(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetGenerationSize(
     JNIEnv* env, jobject thiz, jint symbols)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);
     source.set_generation_size(symbols);
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setMaxDataRedundancy(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetMaxDataRedundancy(
     JNIEnv* env, jobject thiz, jfloat data_redundancy)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);
@@ -165,7 +165,7 @@ jfloat Java_com_steinwurf_score_source_AutoSource_maxDataRedundancy(
     return source.max_data_redundancy();
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setDataRedundancyEstimationGain(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetDataRedundancyEstimationGain(
     JNIEnv* env, jobject thiz, jfloat gain)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);
@@ -179,7 +179,7 @@ jfloat Java_com_steinwurf_score_source_AutoSource_dataRedundancyEstimationGain(
     return source.data_redundancy_estimation_gain();
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setTargetSnacksPerGeneration(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetTargetSnacksPerGeneration(
     JNIEnv* env, jobject thiz, jint snacks)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);
@@ -193,7 +193,7 @@ jint Java_com_steinwurf_score_source_AutoSource_targetSnacksPerGeneration(
     return source.target_snacks_per_generation();
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setMinFeedbackProbability(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetMinFeedbackProbability(
     JNIEnv* env, jobject thiz, jfloat probability)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);
@@ -207,7 +207,7 @@ jfloat Java_com_steinwurf_score_source_AutoSource_minFeedbackProbability(
     return source.min_feedback_probability();
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setMaxFeedbackProbability(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetMaxFeedbackProbability(
     JNIEnv* env, jobject thiz, jfloat probability)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);
@@ -221,7 +221,7 @@ jfloat Java_com_steinwurf_score_source_AutoSource_maxFeedbackProbability(
     return source.max_feedback_probability();
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setFeedbackProbabilityGain(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetFeedbackProbabilityGain(
     JNIEnv* env, jobject thiz, jfloat gain)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);
@@ -235,7 +235,7 @@ jfloat Java_com_steinwurf_score_source_AutoSource_feedbackProbabilityGain(
     return source.feedback_probability_gain();
 }
 
-void Java_com_steinwurf_score_source_AutoSource_setTargetRepairDelay(
+void Java_com_steinwurf_score_source_AutoSource_nativeSetTargetRepairDelay(
     JNIEnv* env, jobject thiz, jint milliseconds_delay)
 {
     auto& source = jutils::get_native<score::api::auto_source>(env, thiz);

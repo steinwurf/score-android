@@ -67,8 +67,17 @@ public class Sink
     /**
      * Returns a snack packet from the sink that should be transmitted to the source.
      * @return the snack packet
+     * @throws IllegalStateException If no snack packet is available.
+     * Use {@link Sink#hasSnackPacket()} to check.
      */
-    public native byte[] getSnackPacket();
+    public byte[] getSnackPacket()
+    {
+        if (!hasSnackPacket())
+            throw new IllegalStateException("No snack packet available.");
+
+        return nativeGetSnackPacket();
+    }
+    private native byte[] nativeGetSnackPacket();
 
     /**
      * Processes an incoming data packet from the source. The internal
@@ -102,8 +111,18 @@ public class Sink
      * Returns an original atomic message that was added to the source.
      * The in-order delivery of the messages is guaranteed, but some messages might be lost.
      * @return the decoded original message
+     * @throws InvalidChecksumException If the message to be extracted has an invalid checksum.
+     * @throws IllegalStateException If no message is available.
+     * Use {@link Sink#hasMessage()} to check.
      */
-    public native byte[] getMessage() throws InvalidChecksumException;
+    public byte[] getMessage() throws InvalidChecksumException, IllegalStateException
+    {
+        if (!hasMessage())
+            throw new IllegalStateException("No message available.");
+
+        return nativeGetMessage();
+    }
+    private native byte[] nativeGetMessage() throws InvalidChecksumException;
 
     /**
      * Finalizes the object and it's underlying native part.

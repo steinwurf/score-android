@@ -88,13 +88,17 @@ def run_tests(properties):
     run_command(command)
 
     device_id = properties['tool_options']['device_id']
-    # Remove any previously installed versions of the app from the device
-    command = 'ANDROID_SERIAL={0} ./gradlew uninstallAll'.format(device_id)
-    run_command(command, shell=True)
 
+    def run_gradle_command(command):
+        cmd = "ANDROID_SERIAL={} ./gradlew {}".format(device_id, command)
+        run_command(cmd, shell=True)
+
+    # Remove any previously installed versions of the app from the device
+    run_gradle_command('uninstallAll')
     # Gradle installs the APK on the target device
-    command = 'ANDROID_SERIAL={0} ./gradlew installDebug'.format(device_id)
-    run_command(command, shell=True)
+    run_gradle_command('installDebug')
+    # Gradle runs unit test on target device
+    run_gradle_command('connectedAndroidTest')
 
 
 def install(properties):

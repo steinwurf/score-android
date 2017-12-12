@@ -48,7 +48,7 @@ int Java_com_steinwurf_score_sink_Sink_snackPackets(JNIEnv* env, jobject thiz)
     return sink.snack_packets();
 }
 
-jbyteArray Java_com_steinwurf_score_sink_Sink_getSnackPacket(
+jbyteArray Java_com_steinwurf_score_sink_Sink_nativeGetSnackPacket(
     JNIEnv* env, jobject thiz)
 {
     auto& sink = jutils::get_native<score::api::sink>(env, thiz);
@@ -88,7 +88,7 @@ jboolean Java_com_steinwurf_score_sink_Sink_hasMessage(
     return sink.has_message();
 }
 
-jbyteArray Java_com_steinwurf_score_sink_Sink_getMessage(
+jbyteArray Java_com_steinwurf_score_sink_Sink_nativeGetMessage(
     JNIEnv* env, jobject thiz)
 {
     auto& sink = jutils::get_native<score::api::sink>(env, thiz);

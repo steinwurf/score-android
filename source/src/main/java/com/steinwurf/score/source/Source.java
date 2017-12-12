@@ -47,8 +47,16 @@ public abstract class Source {
     /**
      * Returns a data packet from the source that should be transmitted to the sink.
      * @return the outgoing data message
+     * @throws IllegalStateException If no data packet is available.
+     * Use {@link Source#hasDataPacket()} to check.
      */
-    public abstract byte[] getDataPacket();
+    public final byte[] getDataPacket() throws IllegalStateException
+    {
+        if (!hasDataPacket())
+            throw new IllegalStateException("No data packet available.");
+        return nativeGetDataPacket();
+    }
+    abstract byte[] nativeGetDataPacket();
 
     /**
      * Processes an incoming snack message from the sink. The internal
