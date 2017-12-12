@@ -69,7 +69,7 @@ jint Java_com_steinwurf_score_source_ManualSource_dataPackets(
     return source.data_packets();
 }
 
-jbyteArray Java_com_steinwurf_score_source_ManualSource_getDataPacket(
+jbyteArray Java_com_steinwurf_score_source_ManualSource_nativeGetDataPacket(
     JNIEnv* env, jobject thiz)
 {
     auto& source = jutils::get_native<score::api::manual_source>(env, thiz);

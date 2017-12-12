@@ -56,7 +56,7 @@ public class ManualSource extends Source
     public native int dataPackets();
 
     @Override
-    public native byte[] getDataPacket();
+    public native byte[] nativeGetDataPacket();
 
     @Override
     public native void readSnackPacket(byte[] buffer, int offset, int size) throws InvalidSnackPacketException;

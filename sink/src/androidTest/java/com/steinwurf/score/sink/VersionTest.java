@@ -1,4 +1,4 @@
-package com.steinwurf.score.source;
+package com.steinwurf.score.sink;
 
 import org.junit.Assert;
 import org.junit.Test;

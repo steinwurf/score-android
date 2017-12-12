@@ -1,75 +1,96 @@
 package com.steinwurf.score.source;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-public class ManualSourceTest extends TestCase {
+public class ManualSourceTest {
 
 
     private ManualSource source;
 
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         source = new ManualSource();
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testGetDataPacket() throws Exception {
+        Assert.assertFalse(source.hasDataPacket());
+        source.getDataPacket();
+    }
+
+    @Test
     public void testFlush() throws Exception {
-        assertFalse(source.hasDataPacket());
+        Assert.assertFalse(source.hasDataPacket());
         source.flush();
-        assertTrue(source.hasDataPacket());
+        Assert.assertTrue(source.hasDataPacket());
     }
 
+    @Test
     public void testHasDataPacket() throws Exception {
-        assertFalse(source.hasDataPacket());
+        Assert.assertFalse(source.hasDataPacket());
     }
 
+    @Test
     public void testDataPackets() throws Exception {
-        assertEquals(0, source.dataPackets());
+        Assert.assertEquals(0, source.dataPackets());
     }
 
+    @Test
     public void testGenerationWindowSize() throws Exception {
-        assertEquals(25, source.generationWindowSize());
+        Assert.assertEquals(25, source.generationWindowSize());
     }
 
+    @Test
     public void testSetGenerationWindowSize() throws Exception {
         source.setGenerationWindowSize(50);
-        assertEquals(50, source.generationWindowSize());
+        Assert.assertEquals(50, source.generationWindowSize());
     }
 
+    @Test
     public void testDataRedundancy() throws Exception {
-        assertEquals(0.0f, source.dataRedundancy());
+        Assert.assertEquals(0.0f, source.dataRedundancy(), 0.0);
     }
 
+    @Test
     public void testSetDataRedundancy() throws Exception {
         source.setDataRedundancy(1.0f);
-        assertEquals(1.0f, source.dataRedundancy());
+        Assert.assertEquals(1.0f, source.dataRedundancy(), 0.0);
     }
 
+    @Test
     public void testFeedbackProbability() throws Exception {
-        assertEquals(1.0f, source.feedbackProbability());
+        Assert.assertEquals(1.0f, source.feedbackProbability(), 0.0);
     }
 
+    @Test
     public void testSetFeedbackProbability() throws Exception {
         source.setFeedbackProbability(1.5f);
-        assertEquals(1.5f, source.feedbackProbability());
+        Assert.assertEquals(1.5f, source.feedbackProbability(), 0.0);
     }
 
+    @Test
     public void testSymbolSize() throws Exception {
-        assertEquals(1000, source.symbolSize());
+        Assert.assertEquals(1000, source.symbolSize());
     }
 
+    @Test
     public void testSetSymbolSize() throws Exception {
         source.setSymbolSize(2000);
-        assertEquals(2000, source.symbolSize());
+        Assert.assertEquals(2000, source.symbolSize());
     }
 
+    @Test
     public void testGenerationSize() throws Exception {
-        assertEquals(10, source.generationSize());
+        Assert.assertEquals(10, source.generationSize());
     }
 
+    @Test
     public void testSetGenerationSize() throws Exception {
         source.setGenerationSize(500);
-        assertEquals(500, source.generationSize());
+        Assert.assertEquals(500, source.generationSize());
     }
 
 }

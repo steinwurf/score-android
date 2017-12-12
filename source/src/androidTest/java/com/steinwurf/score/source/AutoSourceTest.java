@@ -1,122 +1,154 @@
 package com.steinwurf.score.source;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-public class AutoSourceTest extends TestCase {
+public class AutoSourceTest {
 
     private AutoSource source;
 
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         source = new AutoSource();
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testGetDataPacket() throws Exception {
+        Assert.assertFalse(source.hasDataPacket());
+        source.getDataPacket();
+    }
+
+    @Test
     public void testFlush() throws Exception {
-        assertFalse(source.hasDataPacket());
+        Assert.assertFalse(source.hasDataPacket());
         source.flush();
-        assertTrue(source.hasDataPacket());
+        Assert.assertTrue(source.hasDataPacket());
     }
 
+    @Test
     public void testHasDataPacket() throws Exception {
-        assertFalse(source.hasDataPacket());
+        Assert.assertFalse(source.hasDataPacket());
     }
 
+    @Test
     public void testDataPackets() throws Exception {
-        assertEquals(0, source.dataPackets());
+        Assert.assertEquals(0, source.dataPackets());
     }
 
+    @Test
     public void testGenerationWindowSize() throws Exception {
-        assertEquals(0, source.generationWindowSize());
+        Assert.assertEquals(0, source.generationWindowSize());
     }
 
+    @Test
     public void testDataRedundancy() throws Exception {
-        assertEquals(0.0f, source.dataRedundancy());
+        Assert.assertEquals(0.0f, source.dataRedundancy(), 0.0);
     }
 
+    @Test
     public void testFeedbackProbability() throws Exception {
-        assertEquals(1.0f, source.feedbackProbability());
+        Assert.assertEquals(1.0f, source.feedbackProbability(), 0.0);
     }
 
+    @Test
     public void testSymbolSize() throws Exception {
-        assertEquals(1400, source.symbolSize());
+        Assert.assertEquals(1400, source.symbolSize());
     }
 
+    @Test
     public void testSetSymbolSize() throws Exception {
         source.setSymbolSize(2000);
-        assertEquals(2000, source.symbolSize());
+        Assert.assertEquals(2000, source.symbolSize());
     }
 
+    @Test
     public void testGenerationSize() throws Exception {
-        assertEquals(10, source.generationSize());
+        Assert.assertEquals(10, source.generationSize());
     }
 
+    @Test
     public void testSetGenerationSize() throws Exception {
         source.setGenerationSize(500);
-        assertEquals(500, source.generationSize());
+        Assert.assertEquals(500, source.generationSize());
     }
 
+    @Test
     public void testMaxDataRedundancy() throws Exception {
-        assertEquals(2.0f, source.maxDataRedundancy());
+        Assert.assertEquals(2.0f, source.maxDataRedundancy(), 0.0);
     }
 
+    @Test
     public void testSetMaxDataRedundancy() throws Exception {
         source.setMaxDataRedundancy(1);
-        assertEquals(1.0f, source.maxDataRedundancy());
+        Assert.assertEquals(1.0f, source.maxDataRedundancy(), 0.0);
     }
 
+    @Test
     public void testDataRedundancyEstimationGain() throws Exception {
-        assertEquals(0.25f, source.dataRedundancyEstimationGain());
+        Assert.assertEquals(0.25f, source.dataRedundancyEstimationGain(), 0.0);
     }
 
+    @Test
     public void testSetDataRedundancyEstimationGain() throws Exception {
         source.setDataRedundancyEstimationGain(0.5f);
-        assertEquals(0.5f, source.dataRedundancyEstimationGain());
+        Assert.assertEquals(0.5f, source.dataRedundancyEstimationGain(), 0.0);
     }
 
+    @Test
     public void testTargetSnacksPerGeneration() throws Exception {
-        assertEquals(5, source.targetSnacksPerGeneration());
+        Assert.assertEquals(5, source.targetSnacksPerGeneration());
     }
 
+    @Test
     public void testSetTargetSnacksPerGeneration() throws Exception {
         source.setTargetSnacksPerGeneration(3);
-        assertEquals(3, source.targetSnacksPerGeneration());
+        Assert.assertEquals(3, source.targetSnacksPerGeneration(), 0.0);
     }
 
+    @Test
     public void testMinFeedbackProbability() throws Exception {
-        assertEquals(0.0f, source.minFeedbackProbability());
+        Assert.assertEquals(0.0f, source.minFeedbackProbability(), 0.0);
     }
 
+    @Test
     public void testSetMinFeedbackProbability() throws Exception {
         source.setMinFeedbackProbability(0.25f);
-        assertEquals(0.25f, source.minFeedbackProbability());
+        Assert.assertEquals(0.25f, source.minFeedbackProbability(), 0.0);
     }
 
+    @Test
     public void testMaxFeedbackProbability() throws Exception {
-        assertEquals(1.0f, source.maxFeedbackProbability());
+        Assert.assertEquals(1.0f, source.maxFeedbackProbability(), 0.0);
     }
 
+    @Test
     public void testSetMaxFeedbackProbability() throws Exception {
         source.setMaxFeedbackProbability(0.5f);
-        assertEquals(0.5f, source.maxFeedbackProbability());
+        Assert.assertEquals(0.5f, source.maxFeedbackProbability(), 0.0);
     }
 
+    @Test
     public void testFeedbackProbabilityGain() throws Exception {
-        assertEquals(0.1f, source.feedbackProbabilityGain());
+        Assert.assertEquals(0.1f, source.feedbackProbabilityGain(), 0.0);
     }
 
+    @Test
     public void testSetFeedbackProbabilityGain() throws Exception {
         source.setFeedbackProbabilityGain(0.6f);
-        assertEquals(0.6f, source.feedbackProbabilityGain());
+        Assert.assertEquals(0.6f, source.feedbackProbabilityGain(), 0.0);
     }
 
+    @Test
     public void testTargetRepairDelay() throws Exception {
-        assertEquals(300, source.targetRepairDelay());
+        Assert.assertEquals(300, source.targetRepairDelay());
     }
 
+    @Test
     public void testSetTargetRepairDelay() throws Exception {
         source.setTargetRepairDelay(137);
-        assertEquals(137, source.targetRepairDelay());
+        Assert.assertEquals(137, source.targetRepairDelay());
     }
 
 }
