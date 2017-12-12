@@ -39,5 +39,4 @@ public class SinkTest {
         Assert.assertFalse(sink.hasMessage());
         sink.getMessage();
     }
-
 }

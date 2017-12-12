@@ -212,8 +212,8 @@ public class AutoSource extends Source
      */
     public void setSymbolSize(int size)
     {
-        if (size > MAX_SYMBOL_SIZE)
-            throw new IllegalArgumentException(size + " > " + MAX_SYMBOL_SIZE);
+        //if (size > MAX_SYMBOL_SIZE)
+        //    throw new IllegalArgumentException(size + " > " + MAX_SYMBOL_SIZE);
         nativeSetSymbolSize(size);
     }
     private native void nativeSetSymbolSize(int size);

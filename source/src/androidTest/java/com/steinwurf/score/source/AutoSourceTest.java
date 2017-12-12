@@ -59,8 +59,8 @@ public class AutoSourceTest {
 
     @Test
     public void testSetSymbolSize() throws Exception {
-        source.setSymbolSize(2000);
-        Assert.assertEquals(2000, source.symbolSize());
+        source.setSymbolSize(2051);
+        Assert.assertEquals(2051, source.symbolSize());
     }
 
     @Test
@@ -150,5 +150,4 @@ public class AutoSourceTest {
         source.setTargetRepairDelay(137);
         Assert.assertEquals(137, source.targetRepairDelay());
     }
-
 }

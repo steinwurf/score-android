@@ -92,5 +92,4 @@ public class ManualSourceTest {
         source.setGenerationSize(500);
         Assert.assertEquals(500, source.generationSize());
     }
-
 }
