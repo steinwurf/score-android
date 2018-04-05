@@ -5,7 +5,7 @@ import sys
 import json
 import subprocess
 
-project_name = 'wurf-it-android'
+project_name = 'score-android'
 
 
 def run_command(args, shell=False):
