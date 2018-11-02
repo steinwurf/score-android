@@ -38,6 +38,7 @@ allprojects {
         format '%tag%%-commit%%-dirty%'
     }
 
+    apply plugin: 'java'
     javadoc {
         options.addBooleanOption('html5', true)
     }
