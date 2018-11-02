@@ -37,6 +37,10 @@ allprojects {
     androidGitVersion {
         format '%tag%%-commit%%-dirty%'
     }
+
+    javadoc {
+        options.addBooleanOption('html5', true)
+    }
 }
 
 task clean(type: Delete) {
