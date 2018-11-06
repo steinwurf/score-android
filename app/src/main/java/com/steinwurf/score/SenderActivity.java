@@ -324,7 +324,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.symbolSizeSeekBar),
                 (TextView)findViewById(R.id.symbolSizeTextView),
                 false);
-        symbolSizeSeekBar.setMax(ManualSource.MAX_SYMBOL_SIZE);
+        symbolSizeSeekBar.setMax(2000);
         symbolSizeSeekBar.setMin(12);
 
         symbolSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
@@ -339,7 +339,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.generationSizeSeekBar),
                 (TextView)findViewById(R.id.generationSizeTextView),
                 false);
-        generationSizeSeekBar.setMax(ManualSource.MAX_GENERATION_SIZE);
+        generationSizeSeekBar.setMax(500);
         generationSizeSeekBar.setMin(1);
 
         generationSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
@@ -353,7 +353,7 @@ public class SenderActivity extends AppCompatActivity {
                 (SeekBar)findViewById(R.id.generationWindowSizeSeekBar),
                 (TextView)findViewById(R.id.generationWindowSizeTextView),
                 false);
-        generationWindowSizeSeekBar.setMax(ManualSource.MAX_GENERATION_SIZE);
+        generationWindowSizeSeekBar.setMax(500);
 
         generationWindowSizeSeekBar.setOnProgressChangedListener(new SeekBarHelper.onProgressChangedListener() {
             @Override

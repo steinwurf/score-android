@@ -22,43 +22,54 @@ public class ManualSource extends Source
         System.loadLibrary("manual_source_jni");
     }
 
-    private static native int getMaxSymbolSize();
-    private static native int getMaxGenerationSize();
-    private static native int getMaxGenerationWindowSize();
-
-    /**
-     * The maximum symbol size
-     */
-    public static final int MAX_SYMBOL_SIZE = getMaxSymbolSize();
-
-    /**
-     * The maximum generation size
-     */
-    public static final int MAX_GENERATION_SIZE = getMaxGenerationSize();
-
-    /**
-     * The maximum generation window size
-     */
-    public static final int MAX_GENERATION_WINDOW_SIZE = getMaxGenerationWindowSize();
-
     /**
      * A long representing a pointer to the underlying native object.
      */
     private final long pointer;
+
+    public enum Profile {
+        STREAM,
+        OBJECT
+    }
 
     /**
      * Construct ManualSource object.
      */
     public ManualSource()
     {
-        pointer = init();
+        this(Profile.STREAM);
     }
 
     /**
-     * Construct a native Score source and returns a long value which represents
+     * Construct ManualSource object.
+     * @param profile The profile to use for this source
+     */
+    public ManualSource(Profile profile)
+    {
+        long ptr = 0;
+        switch (profile)
+        {
+            case OBJECT:
+                ptr = objectInit();
+                break;
+            case STREAM:
+                ptr = streamInit();
+                break;
+        }
+        pointer = ptr;
+    }
+
+    /**
+     * Construct a native Score stream source and returns a long value which represents
      * the pointer of the created object.
      */
-    private static native long init();
+    private static native long streamInit();
+
+    /**
+     * Construct a native Score object source and returns a long value which represents
+     * the pointer of the created object.
+     */
+    private static native long objectInit();
 
     @Override
     public native void readMessage(byte[] buffer, int offset, int size);
@@ -68,9 +79,6 @@ public class ManualSource extends Source
 
     @Override
     public native boolean hasDataPacket();
-
-    @Override
-    public native int dataPackets();
 
     @Override
     public native byte[] nativeGetDataPacket();
@@ -100,8 +108,8 @@ public class ManualSource extends Source
      */
     public void setSymbolSize(int size)
     {
-        if (size > MAX_SYMBOL_SIZE)
-            throw new IllegalArgumentException(size + " > " + MAX_SYMBOL_SIZE);
+        if (size < 0)
+            throw new IllegalArgumentException(size + " < 0");
         nativeSetSymbolSize(size);
     }
     private native void nativeSetSymbolSize(int size);
@@ -113,8 +121,8 @@ public class ManualSource extends Source
      */
     public void setGenerationSize(int symbols)
     {
-        if (symbols > MAX_GENERATION_SIZE)
-            throw new IllegalArgumentException(symbols + " > " + MAX_GENERATION_SIZE);
+        if (symbols < 0)
+            throw new IllegalArgumentException(symbols + " < 0");
         nativeSetGenerationSize(symbols);
     }
     private native void nativeSetGenerationSize(int symbols);
@@ -125,8 +133,8 @@ public class ManualSource extends Source
      */
     public void setGenerationWindowSize(int generations)
     {
-        if (generations > MAX_GENERATION_WINDOW_SIZE)
-            throw new IllegalArgumentException(generations + " > " + MAX_GENERATION_WINDOW_SIZE);
+        if (generations < 0)
+            throw new IllegalArgumentException(generations + " < 0");
         nativeSetGenerationWindowSize(generations);
     }
     private native void nativeSetGenerationWindowSize(int generations);

@@ -4,160 +4,161 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Random;
+
 public class AutoSourceTest {
 
     private AutoSource source;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         source = new AutoSource();
     }
 
-    @Test
-    public void testMaxSymbolSize() throws Exception {
-        Assert.assertEquals(AutoSource.MAX_SYMBOL_SIZE, 2000);
-    }
-
-    @Test
-    public void testMaxGenerationSize() throws Exception {
-        Assert.assertEquals(AutoSource.MAX_GENERATION_SIZE, 500);
-    }
-
     @Test(expected = IllegalStateException.class)
-    public void testGetDataPacket() throws Exception {
+    public void testGetDataPacket() {
         Assert.assertFalse(source.hasDataPacket());
         source.getDataPacket();
     }
 
     @Test
-    public void testFlush() throws Exception {
-        Assert.assertFalse(source.hasDataPacket());
-        source.flush();
-        Assert.assertTrue(source.hasDataPacket());
-    }
-
-    @Test
-    public void testHasDataPacket() throws Exception {
+    public void testHasDataPacket() {
         Assert.assertFalse(source.hasDataPacket());
     }
 
     @Test
-    public void testDataPackets() throws Exception {
-        Assert.assertEquals(0, source.dataPackets());
-    }
-
-    @Test
-    public void testGenerationWindowSize() throws Exception {
+    public void testGenerationWindowSize() {
         Assert.assertEquals(0, source.generationWindowSize());
     }
 
     @Test
-    public void testDataRedundancy() throws Exception {
+    public void testDataRedundancy() {
         Assert.assertEquals(0.0f, source.dataRedundancy(), 0.0);
     }
 
     @Test
-    public void testFeedbackProbability() throws Exception {
+    public void testFeedbackProbability() {
         Assert.assertEquals(1.0f, source.feedbackProbability(), 0.0);
     }
 
     @Test
-    public void testSymbolSize() throws Exception {
+    public void testSymbolSize() {
         Assert.assertEquals(1400, source.symbolSize());
     }
 
     @Test
-    public void testSetSymbolSize() throws Exception {
+    public void testSetSymbolSize() {
         source.setSymbolSize(2000);
         Assert.assertEquals(2000, source.symbolSize());
     }
 
     @Test
-    public void testGenerationSize() throws Exception {
+    public void testGenerationSize() {
         Assert.assertEquals(10, source.generationSize());
     }
 
     @Test
-    public void testSetGenerationSize() throws Exception {
+    public void testSetGenerationSize() {
         source.setGenerationSize(500);
         Assert.assertEquals(500, source.generationSize());
     }
 
     @Test
-    public void testMaxDataRedundancy() throws Exception {
+    public void testMaxDataRedundancy() {
         Assert.assertEquals(2.0f, source.maxDataRedundancy(), 0.0);
     }
 
     @Test
-    public void testSetMaxDataRedundancy() throws Exception {
+    public void testSetMaxDataRedundancy() {
         source.setMaxDataRedundancy(1);
         Assert.assertEquals(1.0f, source.maxDataRedundancy(), 0.0);
     }
 
     @Test
-    public void testDataRedundancyEstimationGain() throws Exception {
+    public void testDataRedundancyEstimationGain() {
         Assert.assertEquals(0.25f, source.dataRedundancyEstimationGain(), 0.0);
     }
 
     @Test
-    public void testSetDataRedundancyEstimationGain() throws Exception {
+    public void testSetDataRedundancyEstimationGain() {
         source.setDataRedundancyEstimationGain(0.5f);
         Assert.assertEquals(0.5f, source.dataRedundancyEstimationGain(), 0.0);
     }
 
     @Test
-    public void testTargetSnacksPerGeneration() throws Exception {
+    public void testTargetSnacksPerGeneration() {
         Assert.assertEquals(5, source.targetSnacksPerGeneration());
     }
 
     @Test
-    public void testSetTargetSnacksPerGeneration() throws Exception {
+    public void testSetTargetSnacksPerGeneration() {
         source.setTargetSnacksPerGeneration(3);
         Assert.assertEquals(3, source.targetSnacksPerGeneration(), 0.0);
     }
 
     @Test
-    public void testMinFeedbackProbability() throws Exception {
+    public void testMinFeedbackProbability() {
         Assert.assertEquals(0.0f, source.minFeedbackProbability(), 0.0);
     }
 
     @Test
-    public void testSetMinFeedbackProbability() throws Exception {
+    public void testSetMinFeedbackProbability() {
         source.setMinFeedbackProbability(0.25f);
         Assert.assertEquals(0.25f, source.minFeedbackProbability(), 0.0);
     }
 
     @Test
-    public void testMaxFeedbackProbability() throws Exception {
+    public void testMaxFeedbackProbability() {
         Assert.assertEquals(1.0f, source.maxFeedbackProbability(), 0.0);
     }
 
     @Test
-    public void testSetMaxFeedbackProbability() throws Exception {
+    public void testSetMaxFeedbackProbability() {
         source.setMaxFeedbackProbability(0.5f);
         Assert.assertEquals(0.5f, source.maxFeedbackProbability(), 0.0);
     }
 
     @Test
-    public void testFeedbackProbabilityGain() throws Exception {
+    public void testFeedbackProbabilityGain() {
         Assert.assertEquals(0.1f, source.feedbackProbabilityGain(), 0.0);
     }
 
     @Test
-    public void testSetFeedbackProbabilityGain() throws Exception {
+    public void testSetFeedbackProbabilityGain() {
         source.setFeedbackProbabilityGain(0.6f);
         Assert.assertEquals(0.6f, source.feedbackProbabilityGain(), 0.0);
     }
 
     @Test
-    public void testTargetRepairDelay() throws Exception {
+    public void testTargetRepairDelay() {
         Assert.assertEquals(300, source.targetRepairDelay());
     }
 
     @Test
-    public void testSetTargetRepairDelay() throws Exception {
+    public void testSetTargetRepairDelay() {
         source.setTargetRepairDelay(137);
         Assert.assertEquals(137, source.targetRepairDelay());
+    }
+
+    @Test
+    public void testReadMessageGetDataPacket() {
+        byte[] message = new byte[2000];
+        new Random().nextBytes(message);
+        Assert.assertFalse(source.hasDataPacket());
+        source.readMessage(message);
+        Assert.assertTrue(source.hasDataPacket());
+        while (source.hasDataPacket())
+        {
+            byte[] dataPacket = source.getDataPacket();
+            Assert.assertTrue(dataPacket.length > 1000);
+        }
+        source.flush();
+        Assert.assertTrue(source.hasDataPacket());
+        while (source.hasDataPacket())
+        {
+            byte[] dataPacket = source.getDataPacket();
+            Assert.assertTrue(dataPacket.length > 10);
+        }
     }
 }

@@ -22,19 +22,6 @@ public class AutoSource extends Source
         System.loadLibrary("auto_source_jni");
     }
 
-    private static native int getMaxSymbolSize();
-    private static native int getMaxGenerationSize();
-
-    /**
-     * The maximum symbol size
-     */
-    public static final int MAX_SYMBOL_SIZE = getMaxSymbolSize();
-
-    /**
-     * The maximum generation size
-     */
-    public static final int MAX_GENERATION_SIZE = getMaxGenerationSize();
-
     /**
      * A long representing a pointer to the underlying native object.
      */
@@ -62,9 +49,6 @@ public class AutoSource extends Source
 
     @Override
     public native boolean hasDataPacket();
-
-    @Override
-    public native int dataPackets();
 
     @Override
     public native byte[] nativeGetDataPacket();
@@ -225,8 +209,9 @@ public class AutoSource extends Source
      */
     public void setSymbolSize(int size)
     {
-        if (size > MAX_SYMBOL_SIZE)
-            throw new IllegalArgumentException(size + " > " + MAX_SYMBOL_SIZE);
+        // The symbol size must be bigger than the serialization header
+        if (size < 4)
+            throw new IllegalArgumentException(size + " < 4");
         nativeSetSymbolSize(size);
     }
     private native void nativeSetSymbolSize(int size);
@@ -238,8 +223,8 @@ public class AutoSource extends Source
      */
     public void setGenerationSize(int symbols)
     {
-        if (symbols > MAX_GENERATION_SIZE)
-            throw new IllegalArgumentException(symbols + " > " + MAX_GENERATION_SIZE);
+        if (symbols < 0)
+            throw new IllegalArgumentException(symbols + " < 0");
         nativeSetGenerationSize(symbols);
     }
     private native void nativeSetGenerationSize(int symbols);
