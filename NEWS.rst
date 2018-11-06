@@ -7,6 +7,9 @@ every change, see the Git log.
 Latest
 ------
 * tbd
+
+4.0.0
+-----
 * Major: Upgrade to score 28
 
 3.0.0
