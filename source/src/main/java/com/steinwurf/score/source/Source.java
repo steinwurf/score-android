@@ -36,12 +36,6 @@ public abstract class Source {
     public abstract boolean hasDataPacket();
 
     /**
-     * Returns the number of data packets available in the source.
-     * @return the number of data packets
-     */
-    public abstract int dataPackets();
-
-    /**
      * Returns a data packet from the source that should be transmitted to the sink.
      * @return the outgoing data message
      * @throws IllegalStateException If no data packet is available.

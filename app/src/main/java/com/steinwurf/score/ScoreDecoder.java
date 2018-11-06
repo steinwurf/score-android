@@ -10,6 +10,11 @@ import java.util.ArrayList;
 
 public class ScoreDecoder {
 
+    class Message {
+        int size = 1500;
+        byte[] data = new byte[size];
+    }
+
     private static final String TAG = ScoreDecoder.class.getSimpleName();
 
     private boolean feedbackEnabled = false;
@@ -36,6 +41,7 @@ public class ScoreDecoder {
     private long lastMessageSize = 0;
 
     private final Sink sink = new Sink();
+    private final Message message = new Message();
 
     ArrayList<byte[]> handleData(ByteBuffer data) {
         data.order(ByteOrder.BIG_ENDIAN);
@@ -74,14 +80,16 @@ public class ScoreDecoder {
         } catch (Sink.InvalidDataPacketException e) {
             e.printStackTrace();
         }
-        while (sink.hasMessage())
+        while (sink.hasData())
         {
-            try {
-                byte[] message = sink.getMessage();
-                handleMessage(ByteBuffer.wrap(message));
-            } catch (Sink.InvalidChecksumException e) {
-                e.printStackTrace();
+            if (message.data.length < sink.messageSize())
+            {
+                message.data = new byte[sink.messageSize()];
             }
+            message.size = sink.messageSize();
+            sink.writeToMessage(message.data);
+            if (sink.messageCompleted())
+                handleMessage(ByteBuffer.wrap(message.data, 0, message.size));
         }
         ArrayList<byte[]> snackPackets = new ArrayList<>();
         while (feedbackEnabled && sink.hasSnackPacket())

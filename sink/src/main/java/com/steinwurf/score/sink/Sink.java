@@ -27,12 +27,6 @@ public class Sink
         }
     }
 
-    public static class InvalidChecksumException extends Exception {
-        public InvalidChecksumException (String message) {
-            super(message);
-        }
-    }
-
     /**
      * A long representing a pointer to the underlying native object.
      */
@@ -53,31 +47,43 @@ public class Sink
     private static native long init();
 
     /**
-     * Returns if the sink has any snack packets at the moment.
-     * @return true if the sink has any snack packets
+     * Returns true if the sink has decoded any data that can be
+     * extracted with {@link #writeToMessage(byte[])}.
+     * @return true if the sink has any data available
      */
-    public native boolean hasSnackPacket();
+    public native boolean hasData();
 
     /**
-     * Returns the number of snack packets available in the sink.
-     * @return the number of snack packets
+     * Returns the size of the message
+     * @return size of the message in bytes
      */
-    public native int snackPackets();
+    public native int messageSize();
 
     /**
-     * Returns a snack packet from the sink that should be transmitted to the source.
-     * @return the snack packet
-     * @throws IllegalStateException If no snack packet is available.
-     * Use {@link Sink#hasSnackPacket()} to check.
+     * Write parts of a decoded message the given buffer.
+     * If the parts written to the buffer is a complete message, {@link #messageCompleted()} will
+     * return true.
+     * @param buffer buffer to write the message parts to.
+     * @param offset offset of the buffer.
      */
-    public byte[] getSnackPacket()
+    public native void writeToMessage(byte[] buffer, int offset);
+
+    /**
+     * Write parts of a decoded message the given buffer.
+     * If the parts written to the buffer is a complete message, {@link #messageCompleted()} will
+     * return true.
+     * @param buffer buffer to write the message parts to.
+     */
+    public void writeToMessage(byte[] buffer)
     {
-        if (!hasSnackPacket())
-            throw new IllegalStateException("No snack packet available.");
-
-        return nativeGetSnackPacket();
+        writeToMessage(buffer, 0);
     }
-    private native byte[] nativeGetSnackPacket();
+
+    /**
+     * Returns true if a complete message has been written with {@link #writeToMessage(byte[])}.
+     * @return true if a complete message has been written
+     */
+    public native boolean messageCompleted();
 
     /**
      * Processes an incoming data packet from the source. The internal
@@ -101,28 +107,25 @@ public class Sink
     public native void readDataPacket(byte[] buffer, int offset, int size)  throws InvalidDataPacketException;
 
     /**
-     * Returns true if the sink has decoded any original messages that can be
-     * extracted with {@link #getMessage()}.
-     * @return true if the sink has any original messages
+     * Returns if the sink has any snack packets at the moment.
+     * @return true if the sink has any snack packets
      */
-    public native boolean hasMessage();
+    public native boolean hasSnackPacket();
 
     /**
-     * Returns an original atomic message that was added to the source.
-     * The in-order delivery of the messages is guaranteed, but some messages might be lost.
-     * @return the decoded original message
-     * @throws InvalidChecksumException If the message to be extracted has an invalid checksum.
-     * @throws IllegalStateException If no message is available.
-     * Use {@link Sink#hasMessage()} to check.
+     * Returns a snack packet from the sink that should be transmitted to the source.
+     * @return the snack packet
+     * @throws IllegalStateException If no snack packet is available.
+     * Use {@link Sink#hasSnackPacket()} to check.
      */
-    public byte[] getMessage() throws InvalidChecksumException, IllegalStateException
+    public byte[] getSnackPacket()
     {
-        if (!hasMessage())
-            throw new IllegalStateException("No message available.");
+        if (!hasSnackPacket())
+            throw new IllegalStateException("No snack packet available.");
 
-        return nativeGetMessage();
+        return nativeGetSnackPacket();
     }
-    private native byte[] nativeGetMessage() throws InvalidChecksumException;
+    private native byte[] nativeGetSnackPacket();
 
     /**
      * Finalizes the object and it's underlying native part.

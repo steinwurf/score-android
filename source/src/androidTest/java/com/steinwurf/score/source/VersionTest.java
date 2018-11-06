@@ -6,7 +6,7 @@ import org.junit.Test;
 public class VersionTest {
 
     @Test
-    public void testGet() throws Exception {
+    public void testGet() {
         Assert.assertFalse(Version.get().isEmpty());
     }
 }

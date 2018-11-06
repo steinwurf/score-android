@@ -10,7 +10,7 @@
         "name": "score",
         "resolver": "git",
         "method": "semver",
-        "major": 25,
+        "major": 28,
         "sources": ["gitlab.com/steinwurf/score.git"]
     }
 ]

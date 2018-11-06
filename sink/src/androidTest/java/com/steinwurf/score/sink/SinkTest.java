@@ -9,34 +9,41 @@ public class SinkTest {
     private Sink sink;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         sink = new Sink();
     }
 
     @Test
-    public void testHasSnackPacket() throws Exception {
+    public void testHasSnackPacket() {
         Assert.assertFalse(sink.hasSnackPacket());
     }
 
     @Test
-    public void testSnackPackets() throws Exception {
-        Assert.assertEquals(0, sink.snackPackets());
+    public void testSnackPackets() {
+        Assert.assertFalse(sink.hasSnackPacket());
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testGetSnackPacket() throws Exception {
+    public void testGetSnackPacket() {
         Assert.assertFalse(sink.hasSnackPacket());
         sink.getSnackPacket();
     }
 
     @Test
-    public void testHasMessage() throws Exception {
-        Assert.assertFalse(sink.hasMessage());
+    public void testHasMessage() {
+        Assert.assertFalse(sink.hasData());
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testGetMessage() throws Exception {
-        Assert.assertFalse(sink.hasMessage());
-        sink.getMessage();
+    public void testMessageSize() {
+        Assert.assertFalse(sink.hasData());
+        sink.messageSize();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetMessage() {
+        Assert.assertFalse(sink.hasData());
+        byte[] buffer = new byte[10];
+        sink.writeToMessage(buffer);
     }
 }
