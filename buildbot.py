@@ -78,8 +78,7 @@ def build(properties):
     run_command([sys.executable, 'waf', 'build', '-v'])
 
     # Gradle builds the APK (this should be run after the waf build)
-    run_command(['./gradlew', 'assembleDebug'])
-    run_command(['./gradlew', 'androidJavadocs'])
+    run_command(['./gradlew', 'assembleDebug', '--debug'])
 
 
 def run_tests(properties):
