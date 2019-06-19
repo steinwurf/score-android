@@ -6,6 +6,10 @@ every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+5.0.0
+-----
 * Major: Upgrade to score 29
 * Patch: Fix issue with ``writeToMessage`` not working properly.
 
