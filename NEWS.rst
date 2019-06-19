@@ -6,6 +6,10 @@ every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+5.0.1
+-----
 * Patch: Fix Gradle 4.8 Incompatibility by updating jfrog/build-info plugin.
 
 5.0.0
