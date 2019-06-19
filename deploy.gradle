@@ -20,6 +20,20 @@ else
     logger.error('Unable to find Artifactory credentials. Publishing will not be possible.')
 }
 
+task androidJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+
+    android.libraryVariants.all { variant ->
+        owner.classpath += variant.javaCompile.classpath
+    }
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    classifier = 'javadoc'
+    from androidJavadocs.destinationDir
+}
+
 publishing {
     publications {
         aar(MavenPublication) {
@@ -74,16 +88,3 @@ artifactory {
     }
 }
 
-task androidJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-
-    android.libraryVariants.all { variant ->
-        owner.classpath += variant.javaCompile.classpath
-    }
-}
-
-task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    classifier = 'javadoc'
-    from androidJavadocs.destinationDir
-}
