@@ -9,6 +9,8 @@ android {
         targetSdkVersion project.ext.targetSdkVersion
         versionCode androidGitVersion.code()
         versionName androidGitVersion.name()
+
+        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
         release {
@@ -27,4 +29,7 @@ dependencies {
     }
     implementation project(path: ':source')
     implementation project(path: ':sink')
+
+    androidTestImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }

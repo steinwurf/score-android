@@ -74,7 +74,7 @@ void Java_com_steinwurf_score_sink_Sink_writeToMessage(
     assert((uint32_t)jmessage_size >= (offset + sink.message_size()));
 
     sink.write_to_message((uint8_t*)jmessage_ptr + offset);
-    env->ReleaseByteArrayElements(jmessage, jmessage_ptr, JNI_ABORT);
+    env->ReleaseByteArrayElements(jmessage, jmessage_ptr, 0);
 }
 
 jboolean Java_com_steinwurf_score_sink_Sink_messageCompleted(
