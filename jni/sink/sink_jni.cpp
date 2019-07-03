@@ -59,7 +59,7 @@ jint Java_com_steinwurf_score_sink_Sink_messageSize(JNIEnv* env, jobject thiz)
 void Java_com_steinwurf_score_sink_Sink_writeToMessage(
     JNIEnv* env, jobject thiz, jbyteArray jmessage, jint offset)
 {
-    auto jmessage_ptr = env->GetByteArrayElements(jmessage, 0);
+    jbyte* const jmessage_ptr = env->GetByteArrayElements(jmessage, 0);
     auto jmessage_size = env->GetArrayLength(jmessage);
     auto& sink = jutils::get_native<score::sink>(env, thiz);
 
@@ -87,7 +87,7 @@ jboolean Java_com_steinwurf_score_sink_Sink_messageCompleted(
 void Java_com_steinwurf_score_sink_Sink_readDataPacket(
     JNIEnv* env, jobject thiz, jbyteArray jdata_packet, jint offset, jint size)
 {
-    auto jdata_packet_ptr = env->GetByteArrayElements(jdata_packet, 0);
+    jbyte* const jdata_packet_ptr = env->GetByteArrayElements(jdata_packet, 0);
     auto jdata_packet_size = env->GetArrayLength(jdata_packet);
     assert(jdata_packet_size >= (offset + size));
 
@@ -118,7 +118,7 @@ jbyteArray Java_com_steinwurf_score_sink_Sink_nativeGetSnackPacket(
 {
     auto& sink = jutils::get_native<score::sink>(env, thiz);
     jbyteArray jsnack_packet = env->NewByteArray(sink.snack_packet_size());
-    jbyte* jsnack_packet_ptr = env->GetByteArrayElements(jsnack_packet, 0);
+    jbyte* const jsnack_packet_ptr = env->GetByteArrayElements(jsnack_packet, 0);
     sink.write_snack_packet((uint8_t*)jsnack_packet_ptr);
     env->ReleaseByteArrayElements(jsnack_packet, jsnack_packet_ptr, 0);
     return jsnack_packet;

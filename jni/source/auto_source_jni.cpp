@@ -40,7 +40,7 @@ jlong Java_com_steinwurf_score_source_AutoSource_init(
 void Java_com_steinwurf_score_source_AutoSource_readMessage(
     JNIEnv* env, jobject thiz, jbyteArray jmessage, jint offset, jint size)
 {
-    auto jmessage_ptr = env->GetByteArrayElements(jmessage, 0);
+    jbyte* const jmessage_ptr = env->GetByteArrayElements(jmessage, 0);
     auto jmessage_size = env->GetArrayLength(jmessage);
     assert(jmessage_size >= (offset + size));
 
@@ -68,7 +68,7 @@ jbyteArray Java_com_steinwurf_score_source_AutoSource_nativeGetDataPacket(
     auto& source = jutils::get_native<score::auto_source>(env, thiz);
     assert(source.has_data_packet());
     jbyteArray jdata_packet = env->NewByteArray(source.data_packet_size());
-    jbyte* jdata_packet_ptr = env->GetByteArrayElements(jdata_packet, 0);
+    jbyte* const jdata_packet_ptr = env->GetByteArrayElements(jdata_packet, 0);
     source.write_data_packet((uint8_t*)jdata_packet_ptr);
     env->ReleaseByteArrayElements(jdata_packet, jdata_packet_ptr, 0);
     return jdata_packet;
@@ -77,7 +77,7 @@ jbyteArray Java_com_steinwurf_score_source_AutoSource_nativeGetDataPacket(
 void Java_com_steinwurf_score_source_AutoSource_readSnackPacket(
     JNIEnv* env, jobject thiz, jbyteArray jsnack_packet, jint offset, jint size)
 {
-    auto jsnack_packet_ptr = env->GetByteArrayElements(jsnack_packet, 0);
+    jbyte* const jsnack_packet_ptr = env->GetByteArrayElements(jsnack_packet, 0);
     auto jsnack_packet_size = env->GetArrayLength(jsnack_packet);
     assert(jsnack_packet_size >= (offset + size));
 
